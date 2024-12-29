@@ -1,23 +1,31 @@
 <template>
   <div>
-    <input v-model="inputValue" placeholder="Enter some data" />
+    <v-btn @click="sendDataAndClose">Close with Data</v-btn>
+    <!-- <v-text-field
+            label="txt"
+            v-model="txt">
+    </v-text-field> -->
   </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { defineEmits, ref, defineExpose, shallowRef  } from "vue";
 
-// Props 정의
-const props = defineProps({
-  modelValue: String,
-});
+// const txt = ref('');
 
-// Emits 정의
-const emit = defineEmits(["update:modelValue"]);
+// emits 선언
+const emit = defineEmits(["close"]);
 
-// Computed 사용하여 양방향 바인딩 처리
-const inputValue = computed({
-  get: () => props.modelValue, // props에서 modelValue 참조
-  set: (value) => emit("update:modelValue", value),
+// 메서드 정의
+const sendDataAndClose = () => {
+  emit("close", { key: "value", anotherKey: 123 }); // 데이터 전달
+};
+
+const childFunction = () => {
+  console.log("txt1111");
+};
+
+defineExpose({
+  childFunction
 });
 </script>
