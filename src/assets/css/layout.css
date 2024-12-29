@@ -1,0 +1,7 @@
+@import './base.css';
+
+#ci {width:100%; height:65px; font-size: 1.2em; }
+
+#main-wrap {padding:1rem; background-color: var(--vt-c-text-dark-2);}
+#tab-wrap {/*padding-top:1rem;*//* background-color:#fff ;*/}
+#content-wrap {height:100vh; overflow:auto; background-color: #fff; padding:1rem;}
