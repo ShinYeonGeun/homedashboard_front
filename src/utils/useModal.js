@@ -9,6 +9,7 @@ const showModal = ({
     title = "",
     showCloseBtn = true,
     content = "",
+    contentProps = {},
     buttons = [],
     btnAlign = "center",
     overlayClose = false,
@@ -26,27 +27,50 @@ const showModal = ({
     const modalContainer = document.createElement("div");
     document.body.appendChild(modalContainer);
 
-    const vnode = createVNode(ModalComponent, {
-        id,
-        title,
-        showCloseBtn,
-        content,
-        buttons,
-        btnAlign,
-        overlayClose,
-        width,
-        height,
-        onOpen,
-        onClose: () => {
-            onClose();
-            closeModal(id);
-        },
+    // const vnode = createVNode(ModalComponent, {
+    //     id,
+    //     title,
+    //     showCloseBtn,
+    //     content,
+    //     buttons,
+    //     btnAlign,
+    //     overlayClose,
+    //     width,
+    //     height,
+    //     onOpen,
+    //     onClose: () => {
+    //         onClose();
+    //         closeModal(id);
+    //     },
+    // });
+
+    // vnode.appContext = { ...commonStore.appContext };
+
+    // render(vnode, modalContainer);
+    // modalInstances.set(id, { vnode, container: modalContainer });
+    return new Promise((resolve) => {
+        const vnode = createVNode(ModalComponent, {
+            id,
+            title,
+            showCloseBtn,
+            content,
+            contentProps,
+            buttons,
+            btnAlign,
+            overlayClose,
+            width,
+            height,
+            onOpen, // 전달
+            onClose: (data) => {
+                onClose(data); // 사용자가 설정한 onClose 호출
+                resolve(data); // 데이터를 Promise로 반환
+                closeModal(id);
+            },
+        });
+        vnode.appContext = { ...commonStore.appContext };
+        render(vnode, modalContainer);
+        modalInstances.set(id, { vnode, container: modalContainer });
     });
-
-    vnode.appContext = { ...commonStore.appContext };
-
-    render(vnode, modalContainer);
-    modalInstances.set(id, { vnode, container: modalContainer });
 };
 
 const closeModal = (id) => {

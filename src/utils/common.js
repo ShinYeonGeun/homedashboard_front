@@ -277,7 +277,7 @@ export const hideLoading = (loadingComponent) => {
 
 export const showModal = async (props) => {
 	props.id = generateUUID();
-	useModal().showModal(props);
+	return await useModal().showModal(props);
 };
 
 export const alert = async (msg, close) => {
@@ -318,12 +318,10 @@ export const confirm = async (msg, yes, no, close) => {
 };
 
 export const openPopup = async (path, buttons, open, close) => {
-	// const component = import.meta.glob("/src/views/**/*.vue"); //defineAsyncComponent(() => { await import(path) });
-	// const defineComponent = await component;//defineAsyncComponent(() => {});
 	const component = defineAsyncComponent(() =>
 		import(/* @vite-ignore */`/src/views${path}.vue`)
 	);
-	// const loadComponent = component[`/src/views${path}.vue`];
+
 	console.log("component", component);
 	const props = {
 		content: component,

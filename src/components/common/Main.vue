@@ -29,7 +29,7 @@
     });
 
     const openSnackbar = () => {
-      common.showSnackbar(`${txt}를 확인해주세요.`, "error", 2000);
+      common.showSnackbar(`gggggg를 확인해주세요.`, "error", 2000);
     };
 
     const openDialog = () => {
@@ -94,7 +94,8 @@
                       {
                         label: "Confirm2 popup",
                         props: { color: "secondary", variant: "flat", size: "small" },
-                        onClick: () => common.showModal({content:'confirm2', overlayClose:true})
+                        onClick: () => common.showModal({content:'confirm2', overlayClose:true}),
+                        execFunc:'childFunction'
                       },
                       {
                         label: "Cancel popup",
