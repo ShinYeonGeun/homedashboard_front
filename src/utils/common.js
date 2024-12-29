@@ -331,5 +331,5 @@ export const openPopup = async (path, buttons, open, close) => {
 	};
 	const a = await showModal(props);
 
-	console.log("a~!!", a);
+	console.log("a~!!!!!!", a);
 }
