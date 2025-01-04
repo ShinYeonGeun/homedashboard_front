@@ -1,8 +1,8 @@
-import { createVNode, render } from "vue";
+import { createVNode, render, shallowRef, markRaw } from "vue";
 import { useCommonStore } from "@/stores/common/commonStore";
 import ModalComponent from "@/components/common/ModalComponent.vue";
 
-const modalInstances = new Map();
+// const modalInstances = new Map();
 
 const showModal = ({
     id = String(Date.now()),
@@ -18,42 +18,38 @@ const showModal = ({
     onOpen = () => { },
     onClose = () => { },
 }) => {
-    if (modalInstances.has(id)) {
-        console.warn(`A modal with ID "${id}" already exists.`);
-        return;
-    }
 
     const commonStore = useCommonStore();
     const modalContainer = document.createElement("div");
+    modalContainer.dataset.uuid = id;
     document.body.appendChild(modalContainer);
-
-    // const vnode = createVNode(ModalComponent, {
-    //     id,
-    //     title,
-    //     showCloseBtn,
-    //     content,
-    //     buttons,
-    //     btnAlign,
-    //     overlayClose,
-    //     width,
-    //     height,
-    //     onOpen,
-    //     onClose: () => {
-    //         onClose();
-    //         closeModal(id);
-    //     },
-    // });
-
-    // vnode.appContext = { ...commonStore.appContext };
-
-    // render(vnode, modalContainer);
-    // modalInstances.set(id, { vnode, container: modalContainer });
     return new Promise((resolve) => {
+        // const vnode = createVNode(ModalComponent, {
+        //     id,
+        //     title,
+        //     showCloseBtn,
+        //     content,
+        //     contentProps,
+        //     buttons,
+        //     btnAlign,
+        //     overlayClose,
+        //     width,
+        //     height,
+        //     onOpen, // 전달
+        //     onClose: (data) => {
+        //         onClose(data); // 사용자가 설정한 onClose 호출
+        //         resolve(data); // 데이터를 Promise로 반환
+        //     },
+        // });
+        // vnode.key = id;
+        // vnode.appContext = { ...commonStore.appContext };
+        // render(vnode, modalContainer);
+
         const vnode = createVNode(ModalComponent, {
             id,
             title,
             showCloseBtn,
-            content,
+            content: markRaw(content),
             contentProps,
             buttons,
             btnAlign,
@@ -64,27 +60,15 @@ const showModal = ({
             onClose: (data) => {
                 onClose(data); // 사용자가 설정한 onClose 호출
                 resolve(data); // 데이터를 Promise로 반환
-                closeModal(id);
             },
         });
-        vnode.appContext = { ...commonStore.appContext };
+        vnode.key = id;
+        vnode.appContext = commonStore.appContext;
+
         render(vnode, modalContainer);
-        modalInstances.set(id, { vnode, container: modalContainer });
     });
 };
 
-const closeModal = (id) => {
-    const modal = modalInstances.get(id);
-    if (!modal) {
-        console.warn(`No modal found with ID "${id}".`);
-        return;
-    }
-
-    render(null, modal.container); // VNode 제거
-    document.body.removeChild(modal.container); // DOM에서 제거
-    modalInstances.delete(id); // 상태 삭제
-};
-
 export const useModal = () => {
-    return { showModal, closeModal };
+    return { showModal };
 };

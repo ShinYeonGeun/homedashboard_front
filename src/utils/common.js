@@ -2,7 +2,7 @@ import { useRouter } from 'vue-router';
 import { useSnackbar } from '@/utils/useSnackbar';
 import { useLoading } from '@/utils/useLoading';
 import { useModal } from '@/utils/useModal';
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, markRaw } from 'vue'
 
 export const rulesReq = (value) => !!value || '필수 입력항목입니다.';
 
@@ -328,6 +328,6 @@ export const openPopup = async (path, buttons, open, close) => {
 		buttons: buttons
 	};
 	const a = await showModal(props);
-
+	console.log("a~!!!!!!", component);
 	console.log("a~!!!!!!", a);
 }

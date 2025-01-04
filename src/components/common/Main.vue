@@ -6,13 +6,7 @@
     
     const mainStore = useMainStore();
     const router = useRouter();
-    const activeTab = "";//computed(() => mainStore.activeTab);
-    // const tabs = computed(() => mainStore.tabs);
-    // const activeTab = ref(0); // 기본 활성화 탭 (첫 번째)
-    // const activeTab = computed({
-    //   get: () => mainStore.activeTab,
-    //   set: (value) => mainStore.setActiveTab(value),
-    // });
+    const activeTab = "";
 
     onMounted(() => {
       // 초기 경로를 설정
@@ -85,11 +79,7 @@
   const confirmNo = () => {
     console.log("confirmNo~");
   };
-  //   watch(
-  // () => mainStore.activeTab,
-  // (newValue) => {
-  //   console.log(`activeTab 변경 감지: ${newValue}`);
-  // });
+
   const popupBtn = [
                       {
                         label: "Confirm2 popup",
@@ -100,7 +90,21 @@
                       {
                         label: "Cancel popup",
                         props: { color: "secondary", variant: "flat" },
-                        onClick: () => alert("Cancelled!"),
+                        onClick: () => console.log("Cancelled!"),
+                        close: true,
+                      },
+                    ];
+  const popupBtn2 = [
+                      {
+                        label: "Confirm2 popup",
+                        props: { color: "secondary", variant: "flat", size: "small" },
+                        //onClick: () => common.showModal({content:'confirm2', overlayClose:true}),
+                        execFunc:'test'
+                      },
+                      {
+                        label: "Cancel popup",
+                        props: { color: "secondary", variant: "flat" },
+                        onClick: () => console.log("Cancelled!"),
                         close: true,
                       },
                     ];
@@ -175,6 +179,19 @@
                       }"
                     >
                       레이어팝업
+                </v-btn>
+                <v-btn
+                      block
+                      color="primary"
+                      class="mt-4"
+                      @click="() => {
+                        common.openPopup('/common/POPUP_SAMPLE2'
+                                        , popupBtn2
+                                        , confirmYes
+                                        , confirmNo);
+                      }"
+                    >
+                      레이어팝업2
                 </v-btn>
                 <v-btn
                   block
