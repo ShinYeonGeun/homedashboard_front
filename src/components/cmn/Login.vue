@@ -99,7 +99,7 @@ const doLogin = async (e) => {
             label="ID"
             v-model="id"
             :rules="[common.rulesReq]"
-            outlined
+            variant="outlined"
             dense
             @keydown='doLogin'
           ></v-text-field>
@@ -109,7 +109,7 @@ const doLogin = async (e) => {
             label="Password"
             v-model="password"
             :rules="[common.rulesReq]"
-            outlined
+            variant="outlined"
             dense
             type="password"
             @keydown='doLogin'

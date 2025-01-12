@@ -2,7 +2,7 @@ import { useRouter } from 'vue-router';
 import { useSnackbar } from '@/utils/useSnackbar';
 import { useLoading } from '@/utils/useLoading';
 import { useModal } from '@/utils/useModal';
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, markRaw } from 'vue'
 
 export const rulesReq = (value) => !!value || '필수 입력항목입니다.';
 
@@ -45,12 +45,14 @@ export const send = async (uri, option, data, sccessFunc, errorFunc) => {
 			}
 
 		} else {
+
+			showSnackbar('시스템 오류가 발생했습니다.', colorList.DANGER);
+
 			console.error(res);
 
 			if (res.status) {
 				if (res.status == 401) {
-					//window.location.href = '/login';
-					//loadContent(document.getElementById('wrapper'), '/cmn/usr/Login');
+					window.location.href = '/cmn/Login';
 				}
 			}
 		}
@@ -159,6 +161,10 @@ export const ignoreEquals = (s, v) => {
 };
 
 export const getDateString = (date, format) => {
+	return getDateFormat(new Date(date), format);
+};
+
+export const getDateFormat = (date, format) => {
 	const year = date.getFullYear();
 	const month = (date.getMonth() + 1).toString().padStart(2, '0');
 	const day = date.getDate().toString().padStart(2, '0');
@@ -235,11 +241,6 @@ export const loginCheck = () => {
 					logout();
 				}
 
-				// document.getElementById('userInfoLoginDtm').innerText = common.getDateString(loginTime, "YYYY-MM-DD HH:mm:ss"); 
-
-				// console.log("만료", new Date(info.exp * 1000));
-				// loginTimeChecker(expTime);
-
 				return true;
 			}
 			//헤더 권한
@@ -248,8 +249,6 @@ export const loginCheck = () => {
 	} else {
 		//login화면으로
 		console.log("login필요~");
-		//router.push({path:'/cmn/Login'});
-		// window.location.href = '/cmn/Login'
 	}
 
 	return false;
@@ -259,6 +258,7 @@ export const logout = () => {
 	//clearInterval(loginTimeChecker);
 	//openMenus = [];
 	sessionStorage.removeItem('Access-Token');
+
 	//routeTo('/');
 	//common.loadContent(document.getElementById('wrapper'), '/cmn/usr/Login');
 };
@@ -318,16 +318,62 @@ export const confirm = async (msg, yes, no, close) => {
 };
 
 export const openPopup = async (path, buttons, open, close) => {
+
 	const component = defineAsyncComponent(() =>
 		import(/* @vite-ignore */`/src/views${path}.vue`)
 	);
 
-	console.log("component", component);
 	const props = {
 		content: component,
 		buttons: buttons
 	};
 	const a = await showModal(props);
+}
 
-	console.log("a~!!!!!!", a);
+export const adjustHeight = (props) => {
+
+	let height = document.querySelector(props.base).offsetHeight;
+
+	for (const i of props.excludes) {
+		height -= document.querySelector(i).offsetHeight;
+	}
+
+	if (props.reduce) {
+		height -= props.reduce;
+	}
+
+	document.querySelector(props.target).style.height = `${height}px`;
+}
+
+export const commonAdjustHeight = () => {
+	//adjustHeight(".app-container", "#content-wrap", ".search-area");
+	adjustHeight({ target: ".app-container", base: "#content-wrap", excludes: [".search-area"] });
+}
+
+export const searchComCodeList = async ({
+	codeList = [],
+	codeDelYn = '',
+	codeDetailDelYn = ''
+}) => {
+	let codes = {};
+	await sendByTrnCd('CCD00101', { codeList: ['USER_STATE'] }, (d, r) => {
+		console.log("CCD00101", r);
+		if (r.resultCd === 'S') {
+			Object.assign(codes, r.payload);
+		} else {
+			codes = null;
+		}
+
+	}, (params, res) => {
+		console.log("error", res);
+		common.showSnackbar(`공통코드 조회 중 오류가 발생되었습니다.`, "red", 2000);
+	});
+
+	return codes;
+};
+
+export const colorList = {
+	EXCEL_DOWNLOAD: 'green-darken-4',
+	DANGER: 'red-darken-2',
+	REFRESH_BUTTON: 'grey-darken-1',
 }

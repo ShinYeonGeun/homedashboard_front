@@ -1,5 +1,5 @@
 <template>
-  <div v-if="visible" class="modal-overlay" @click="handleOverlayClick">
+  <div v-if="visible" class="modal-overlay" @click="handleOverlayClick" transition="false">
     <div class="modal" @click.stop :style="style">
       <header class="modal-header">
         <h3>{{ title }}</h3>
@@ -9,9 +9,10 @@
         <!-- 문자열일 경우 -->
         <p v-if="typeof content === 'string'" v-html="content" class="p1"></p>
         <!-- 컴포넌트일 경우 -->
-        <component v-else :is="content" 
-          ref="contentComponent"
+        <component v-else :is="contentComponent" 
+          ref="contentComponentRef"
           v-bind="contentProps"
+          :key="contentId" 
           @close="handleContentClose"></component>
       </main>
       <footer v-if="buttons && buttons.length" class="modal-footer" :class="btnAlign">
@@ -28,7 +29,7 @@
   </div>
 </template>
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, render, onMounted, onUnmounted, shallowRef, markRaw , nextTick , onUpdated } from "vue";
 
 // Props 정의
 const props = defineProps({
@@ -49,12 +50,18 @@ const props = defineProps({
 // Reactive 상태
 const visible = ref(false);
 const style = ref({});
-const contentComponent = ref(null);
+const contentId = `${props.id}-component`
+const contentComponentRef = ref(null);
+const contentComponent = ref(props.content);
 
 // 컴포넌트 마운트 시 열기
 onMounted(() => {
-  open(); // 컴포넌트가 마운트되면 자동으로 열림
-  console.log("onMounted", contentComponent);
+  open(); // 컴포넌트가 마운트되면 자동으로 열림   
+});
+
+onUnmounted(() => {
+  const container = document.querySelector(`div[data-uuid="${props.id}"]`);
+  if (container) render(null, container);
 });
 
 // open 메서드
@@ -70,9 +77,16 @@ const open = () => {
 };
 
 // close 메서드
-const close = (data = {}) => {
+const close = (data) => {
   visible.value = false;
   if (props.onClose) props.onClose(data);
+
+  const container = document.querySelector(`div[data-uuid="${props.id}" ]`);
+
+  if(container) {
+    render(null, container);
+  }
+  
   return data;
 };
 
@@ -91,74 +105,25 @@ const handleButtonClick = (button) => {
   if (button.onClick) button.onClick();
   
    // execFunc 메서드가 존재하는지 확인하고 호출
-   console.log("execFunc method", contentComponent.value?.[button.execFunc]);
-  if (button.execFunc && contentComponent.value && typeof contentComponent.value[button.execFunc] === 'function') {
-    contentComponent.value[button.execFunc](); // 하위 컴포넌트 메서드 호출
-  }
+  nextTick(() => {
+    // 컴포넌트가 렌더링된 후에 ref에 접근
+    console.log("contentComponentRef", contentComponentRef);
+
+    if (contentComponentRef.value) {
+      
+      // 자식 컴포넌트의 메서드를 호출
+      let execFunc = contentComponentRef.value.component 
+                    ? contentComponentRef.value.component[button.execFunc]
+                    : contentComponentRef.value[button.execFunc];
+
+      if (execFunc && typeof execFunc === 'function') {
+        execFunc();
+      }
+    }
+  });
   if (button.close) close();
 };
 </script>
-// <script>
-// export default {
-//   name: "ModalComponent",
-//   props: {
-//     id: { type: String, required: true },
-//     showCloseBtn: {type: Boolean, default: true},
-//     title: { type: String, default: "" },
-//     content: { type: [String, Object], required: false },
-//     contentProps: { type: Object, default: () => ({}) }, // 추가
-//     buttons: { type: Array, default: () => [] },
-//     btnAlign: { type: String, default: "center" },
-//     overlayClose: { type: Boolean, default: false },
-//     width: {type: Number, default: 400},
-//     height: {type: Number, default: 0},
-//     onClose: { type: Function, required: false },
-//     onOpen: { type: Function, required: false },
-//   },
-//   data() {
-//     return {
-//       visible: false,
-//       style:{}
-//     };
-//   },
-//   mounted() {
-//     this.open(); // 컴포넌트가 마운트되면 자동으로 열림
-//   },
-//   methods: {
-//     open() {
-//       this.visible = true;
-//       this.style.width = `${this.width}px`;
-      
-//       if(this.height > 0) {
-//         this.style.height = `${this.height}px`;
-//       }
-
-//       if (this.onOpen) this.onOpen();
-//     },
-//     // close() {
-//     //   this.visible = false;
-//     //   if (this.onClose) this.onClose();
-//     // },
-//     close(data) {
-//       // data는 호출한 쪽에서 전달받음
-//       this.visible = false;
-//       if (this.onClose) this.onClose(data); // 데이터를 onClose로 전달
-//       return data;
-//     },
-//     handleContentClose(data) {
-//       // 하위 컴포넌트에서 전달받은 데이터로 close 호출
-//       this.close(data);
-//     },
-//     handleOverlayClick() {
-//       if (this.overlayClose) this.close();
-//     },
-//     handleButtonClick(button) {
-//       if (button.onClick) button.onClick();
-//       if (button.close) this.close();
-//     },
-//   },
-// };
-// </script>
 
 <style>
 .modal-overlay {
