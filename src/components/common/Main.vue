@@ -3,12 +3,16 @@
     import * as common from '@/utils/common'
     import { onMounted, computed, ref, watch  } from 'vue';
     import { useRouter } from 'vue-router';
+    import Selectbox from '@/components/common/Selectbox.vue'
     
     const mainStore = useMainStore();
     const router = useRouter();
     const activeTab = "";
 
-    onMounted(() => {
+    const commCodeInfo = ref({});
+    const userState = ref([]);
+const userStateModel = ref({});
+    onMounted(async () => {
       // 초기 경로를 설정
       router.push('/');
 
@@ -19,7 +23,11 @@
 
       //common.hideLoading();
       // activeTab 값이 변경될 때마다 Pinia 상태 갱신
-
+      //공통코드 조회
+      commCodeInfo.value = await common.searchComCodeList({codeList:['USER_STATE']});
+      userState.value.push(... commCodeInfo.value.USER_STATE.codeList);
+      console.log(">>>commCodeInfo.value", commCodeInfo.value);
+      console.log(">>>commCodeInfo.value", userState.value);
     });
 
     const openSnackbar = () => {
@@ -201,6 +209,15 @@
                 >
                 스낵바 샘플
                 </v-btn>
+                <Selectbox
+                  :items="userState"
+                  item-title = "codeValCtnt"
+                  item-value = "codeVal"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  v-model="userStateModel"
+                />
               </div>
             </div>
           </v-tabs-window-item>
