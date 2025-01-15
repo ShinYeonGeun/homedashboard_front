@@ -1,119 +1,127 @@
 <template>
-<!-- v-bind="$attrs"   부모에서 전달된 모든 속성 전달 -->
+  <!-- 부모에서 전달된 모든 속성 전달 -->
   <v-select
-    v-bind="$attrs"  
-    :model-value="selectedItem"  
+    v-bind="$attrs"
+    :model-value="selectedItem"
     @update:modelValue="updateSelectedItem"
-    :items="items"
+    :items="formattedItems"
   >
-  <template v-slot:item="{ props, item }">
-  <v-list-item v-bind="props">
-    <div v-if="item" class="ps-3">
-      <div v-if="formatter === 'k:v'">
-        <!-- 포맷팅된 값을 title로 설정 -->
-        <span>{{ item.value }} : {{ item.title }}</span>
-      </div>
-      <div v-else-if="formatter === 'v:k'">
-        <span>{{ item.value }} : {{ item.title }}</span>
-      </div>
-      <div v-else-if="formatter === 'k-v'">
-        <span>{{ item.title }} - {{ item.value }}</span>
-      </div>
-      <div v-else-if="formatter === 'v-k'">
-        <span>{{ item.value }} - {{ item.title }}</span>
-      </div>
-      <div v-else>
-        <span>{{ item.value }}</span>
-      </div>
-    </div>
-  </v-list-item>
-</template>
-    <!-- <template #item="{ item }">
-      <div v-if="item" class="ps-3">
-        <div v-if="formatter === 'k:v'">
-            <span>{{ item.value }} : {{ item.title }}</span>
-        </div>
-        <div v-else-if="formatter === 'v:k'">
-            <span>{{ item.value }} : {{ item.title }}</span>
-        </div>
-        <div v-else-if="formatter === 'k-v'">
-            <span>{{ item.title }} - {{ item.value }}</span>
-        </div>
-        <div v-else-if="formatter === 'v-k'">
-            <span>{{ item.value }} - {{ item.title }}</span>
-        </div>
-        <div v-else>
-            <span>{{ item.value }}</span>
-        </div>
-      </div>
-    </template> -->
+    <!-- 아이템 표시 형식 커스터마이징 -->
+    <template v-slot:item="{ props, item }">
+      <v-list-item v-bind="props" :title="formatItem(item)"></v-list-item>
+    </template>
 
     <!-- 선택된 값 커스터마이징 -->
-    <template #selection="{ item }">
-      <div v-if="item">
-        <span>{{ item.title }} : {{ item.value }}</span>
-      </div>
+    <!-- <template #selection="{ item }"> -->
+    <template v-slot:selection="{ item, index }">
+      <!-- item.title !== '[object Object] 왜 이걸로 처음에 세팅됨?-->
+      <span v-if="item.title !== '[object Object]'" class="v-select__selection-text">{{formatItem(item)}}</span>
     </template>
   </v-select>
 </template>
+
 <script setup>
-import { ref, defineProps, watch , onMounted} from 'vue';
+import { ref, computed, defineProps, watch, onMounted, useAttrs } from 'vue';
+import * as common from '@/utils/common'
 
 // props 정의
 const props = defineProps({
   formatter: {
     type: String,
-    default: 'k:v',
+    default: '', // 기본 형식: key:value
   },
   items: {
     type: Array,
-    required: true,
+    required: true, // 필수 prop
   },
+  modelValue: {
+    type: [String, Object], // v-model로 전달되는 값의 타입
+  },
+  emptyText:{
+    type: String,
+  },
+  emptyValue:{
+    type: [String, Object],
+  },
+  emptyMode: {
+    type: String,
+    default: 'append'
+  }
 });
 
-// 선택된 항목을 저장하는 변수
-const selectedItem = ref(null);
-const title = ref('');
+// `useAttrs`를 이용하여 $attrs 접근
+const attrs = useAttrs();
 
-// modelValue가 변경되었을 때 호출되는 함수
+// 선택된 항목
+const selectedItem = ref(props.modelValue);
+
+// emit 이벤트를 정의하여 부모에게 값 전달
+const emit = defineEmits(['update:modelValue']);
+
+// `formatter`를 기반으로 항목을 처리
+const formattedItems = computed(() => {
+  // const title = item[attrs['item-title']];
+  // const value = item[attrs['item-value']];
+  let emptyItem = {};
+  let addEmptyItem = false;
+  let items = null;
+
+  if(props.emptyText) {
+    addEmptyItem = true;
+    emptyItem[attrs['item-title']] = props.emptyText;
+    emptyItem[attrs['item-value']] = props.emptyValue;
+  }
+
+  if(addEmptyItem) {
+    if(props.emptyMode === 'append') {
+      items = [... props.items, emptyItem];
+    } else {
+      items = [emptyItem, ... props.items];
+    }
+  } else {
+    items = props.items;
+  }
+console.log("items111",items, addEmptyItem);
+  //return props.items.map((item) => {
+  return items.map((item) => {
+    const formattedTitle = formatItem(item);
+    console.log("items", item, formattedTitle);
+    return {
+      ...item,
+      formattedTitle, // 포맷팅된 제목 추가
+    };
+  });
+});
+
+// formatter에 따라 항목을 포맷팅하는 함수
+const formatItem = (item) => {
+  const { title, value } = item;
+  console.log("items2", item);
+  switch (props.formatter) {
+    case 'v':
+      return value;
+    case 't:v':
+      return `${title}:${value}`;
+    case 'v:t':
+      return `${value}:${title}`;
+    case 't-v':
+      return `${title}-${value}`;
+    case 'v-t':
+      return `${value}-${title}`;
+    default: 
+      return title; // 기본적으로 title만 표시
+  }
+};
+
+// modelValue 변경 시 선택된 항목 업데이트
 watch(() => props.modelValue, (value) => {
   selectedItem.value = value;
 });
 
-// 선택된 항목을 업데이트하는 함수
+// 선택된 항목 업데이트
 const updateSelectedItem = (value) => {
   selectedItem.value = value;
+  emit('update:modelValue', value);  // 부모에게 값 전달
 };
 
-// 컴포넌트가 마운트 되었을 때 실행되는 로직
-onMounted(() => {
-  console.log('컴포넌트가 마운트되었습니다');
-});
 </script>
-
-// <script>
-// export default {
-//   name: 'Selectbox',
-//   props: {
-//     formatter: {
-//       type: String,
-//       default: "k:v",
-//     },
-//     items: {
-//       type: Array,
-//       required: true
-//     }
-//   },
-//   data() {
-//     return {
-//       selectedItem: null,  // 선택된 항목을 저장하는 변수
-//     };
-//   },
-//   methods: {
-//     // modelValue가 변경되었을 때 호출되는 함수
-//     updateSelectedItem(value) {
-//       this.selectedItem = value;  // 선택된 항목을 업데이트
-//     }
-//   }
-// };
-// </script>
