@@ -12,19 +12,22 @@
       />
       <!-- <v-btn icon class="me-2">
         <v-icon>mdi-magnify</v-icon>
-      </v-btn> -->
-      <v-select
-        :items="userStateItems"
-        item-title = "text"
-        item-value = "value"
+      </v-btn> userStateItems-->
+      <Selectbox
+        :items="userState" 
+        item-title = "codeValCtnt"
+        item-value = "codeVal"
         v-model="userStateItem"
         label="상태"
         variant="outlined"
         density="compact"
         hide-details
         class="me-2"
+        formatter="t:v"
+        emptyText="ㅁㅁㅁ"
+        emptyValue="AAA"
       />
-      <v-select
+      <Selectbox
         :items="delYnItems"
         item-title = "text"
         item-value = "value"
@@ -34,6 +37,7 @@
         density="compact"
         hide-details
         class="me-2"
+        formatter="t:v"
       />
       <v-spacer></v-spacer>
       <v-btn
@@ -84,7 +88,8 @@
           v-on:scroll:bottom="loadMore"
           show-select
           disable-sort
-          v-model="userItem"
+          v-model="userItemList"
+          @click:row="onRowClick"
         >
           <template v-slot:[`item.pswdErrCnt`]="{ item }">
             <span>{{ common.evl(item.pswdErrCnt, 0) }}</span>
@@ -97,9 +102,9 @@
             v-model="item.userState"
             variant="outlined"
             density="compact"
+            formatter="t:v"
             hide-details
-            readonly
-          />
+            />
           </template>
           <template v-slot:[`item.lastLoginDtm`]="{ item }">
             <span>{{ common.getDateString(item.lastLoginDtm, 'YYYY-MM-DD HH:MM:SS') }}</span>
@@ -115,16 +120,27 @@
       <!-- 오른쪽 탭 영역 -->
       <div class="tabs-area">
         <v-tabs v-model="tab" grow>
-          <v-tab :value="0">탭 1</v-tab>
+          <v-tab :value="0">회원정보</v-tab>
           <v-tab :value="1">탭 2</v-tab>
           <v-tab :value="2">탭 3</v-tab>
         </v-tabs>
         <v-tabs-window v-model="tab">
           <v-tabs-window-item :value="0">
-            <v-card flat>
-              <v-card-text>탭 1 내용
-
+            <div>
                 {{userItem}}
+                {{userItemList}}
+            </div>
+            <v-card flat>
+              <v-card-text>
+                <!-- 아이디 입력 -->
+                <v-text-field
+                  label="사용자 ID"
+                  v-model="userItem.uid"
+                  :rules="[common.rulesReq]"
+                  variant="outlined"
+                  dense
+                  density="compact"
+                ></v-text-field>
               </v-card-text>
             </v-card>
           </v-tabs-window-item>
@@ -152,6 +168,7 @@ import Selectbox from '@/components/common/Selectbox.vue'
 const schUid = ref('');
 const commCodeInfo = ref({});
 const userState = ref([]);
+const userItemList = ref(null);
 const userItem = ref({});
 const userStateItems = [
                         {text:'전체', value:''}
@@ -186,7 +203,7 @@ const pageInfo = ref({
 const headers = [
   { key: "uid", title: "사용자ID", width:200, headerProps:{'class':'text-center'}},
   { key: "pswdErrCnt", title: "PW오류(건)", align:' d-none', width:80},
-  { key: "userState", title: "상태", width:150, headerProps:{'class':'text-center'}},
+  { key: "userState", title: "상태", width:160, headerProps:{'class':'text-center'}},
   { key: "lastLoginDtm", title: "최종로그인일자", align:'center', width:200, headerProps:{'class':'text-center'} },
   { key: "delYn", title: "삭제", width:90, align:'center', headerProps:{'class':'text-center'} },
   { key: "lastTrnUUID", title: "최종거래UUID", align:' d-none', width:80 },
@@ -249,9 +266,15 @@ const resetFields = () => {
   pageInfo.value.pageNo = 1;
 };
 
+// 행 클릭 이벤트 핸들러
+const onRowClick = (event, row) => {
+  userItem.value = row.item; // 클릭된 행 데이터 저장
+  console.log("Row clicked:", row);
+};
+
 onMounted(async () => {
-  userStateItem.value = {text:'전체', value:''};
-  delYnItem.value = {text:'전체', value:''};
+  
+  
   common.commonAdjustHeight();
   common.adjustHeight({ target: "#userListTable"
                       , base: ".app-container"
@@ -261,9 +284,11 @@ onMounted(async () => {
   //공통코드 조회
   commCodeInfo.value = await common.searchComCodeList({codeList:['USER_STATE']});
   userState.value.push(... commCodeInfo.value.USER_STATE.codeList);
-  console.log(">>>commCodeInfo.value", commCodeInfo.value);
-  console.log(">>>commCodeInfo.value", userState.value);
+  // userStateItem.value = {codeValCtnt:'전체', codeVal:''};
+  delYnItem.value = {text:'전체', value:''};
 });
+
+
 </script>
 
 <style scoped>
