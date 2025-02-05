@@ -6,6 +6,9 @@ import ModalComponent from "@/components/common/ModalComponent.vue";
 
 const showModal = ({
     id = String(Date.now()),
+    noHeader = false,
+    noHeaderDivider = false,
+    noFooterDivider = false,
     title = "",
     showCloseBtn = true,
     content = "",
@@ -23,30 +26,13 @@ const showModal = ({
     const modalContainer = document.createElement("div");
     modalContainer.dataset.uuid = id;
     document.body.appendChild(modalContainer);
-    return new Promise((resolve) => {
-        // const vnode = createVNode(ModalComponent, {
-        //     id,
-        //     title,
-        //     showCloseBtn,
-        //     content,
-        //     contentProps,
-        //     buttons,
-        //     btnAlign,
-        //     overlayClose,
-        //     width,
-        //     height,
-        //     onOpen, // 전달
-        //     onClose: (data) => {
-        //         onClose(data); // 사용자가 설정한 onClose 호출
-        //         resolve(data); // 데이터를 Promise로 반환
-        //     },
-        // });
-        // vnode.key = id;
-        // vnode.appContext = { ...commonStore.appContext };
-        // render(vnode, modalContainer);
 
+    return new Promise((resolve) => {
         const vnode = createVNode(ModalComponent, {
             id,
+            noHeader,
+            noHeaderDivider,
+            noFooterDivider,
             title,
             showCloseBtn,
             content: markRaw(content),

@@ -30,7 +30,7 @@ export function useSnackbar() {
     });
 
     // 앱 컨텍스트 연결
-    vnode.appContext = {... commonStore.appContext};
+    vnode.appContext = { ...commonStore.appContext };
 
     // DOM에 렌더링
     render(vnode, container);

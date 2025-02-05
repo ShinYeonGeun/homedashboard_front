@@ -1,30 +1,41 @@
 <script setup>
   import { useMainStore } from '@/stores/common/main' 
+  import { useCommonStore } from '@/stores/common/commonStore' 
   import * as common from '@/utils/common'
   import { onMounted, onUnmounted, ref } from 'vue';
   import { useRouter } from 'vue-router';
 
   const mainStore = useMainStore();
-
+  const commonStore = useCommonStore();
   const loginInfo = ref({});
   const remainTime = ref('');
   let intervalId = null;
+  const isTimeLeft = ref(false);
+  const isCloseExtensionPopup = ref(false);
+  const router = useRouter();
 
   onMounted(() => {
     init();
   });
   
-
   // 컴포넌트 언마운트 시 타이머 중지
   onUnmounted(() => {
     stopRemainTimeUpdater();
   });
 
-  const init = () => {
+  const init = async () => {
+      if(setLoginInfo()) {
+        startRemainTimeUpdater();
+        commonStore.setLoginId(loginInfo.value.sub);
+      }
+  };
+
+  const setLoginInfo = () => {
     const asseccToken = sessionStorage.getItem('Access-Token');
     
-    if(!common.isEmpty(asseccToken)) {
-      
+    if(common.isEmpty(asseccToken)) {
+      loginInfo.value = {};
+    }else{
       const arr = asseccToken.split(".");
 
       if(common.isEmpty(arr) || arr.length < 2 ){
@@ -36,17 +47,19 @@
       if(!common.isEmpty(data)) {
         for(const key in data){
           switch(key) {
-            // case 'loginDtm':
-            //   loginInfo.value[key] = new Date(data[key] * 1000);
-            //   break;
+            case 'loginDtm':
+              loginInfo.value[key] = common.getDateString(data[key] * 1000, 'YYYY-MM-DD HH:MM:SS');
+              break;
             default:
               loginInfo.value[key] = data[key];
+              break;
           }
         }
-        startRemainTimeUpdater();
+        return true;
       }
-      console.log("data", loginInfo.value);
     }
+
+    return false;
   };
 
   const formatTime = (ms) => {
@@ -62,9 +75,21 @@
     
     if (remainingMs > 0) {
       remainTime.value = formatTime(remainingMs);
+
+      if(remainingMs <= 60000) {
+        if(!isTimeLeft.value) {
+          isTimeLeft.value = true;
+        }
+        if(!isCloseExtensionPopup.value) {
+          changeCloseExtensionPopup();
+          common.confirm(`로그인 곧 만료됩니다.<br/> "확인" 버튼을 눌러 연장하거나 우측상단 "연장" 버튼을 눌러 시간을 연장해주세요.`, extensionLogin);
+        }
+      }
+
     } else {
       remainTime.value = '00:00:00';
       clearInterval(intervalId); // 만료 시 타이머 중지
+      logout();
     }
   };
 
@@ -81,29 +106,78 @@
   };
 
   const logout = () => {
-    const router = useRouter();
     sessionStorage.removeItem('Access-Token');
-    router.push('/');
+    router.push({path:'/cmn/Login'});
   };
   
+  const changeCloseExtensionPopup = () => {
+    isCloseExtensionPopup.value = !isCloseExtensionPopup.value;
+  };
+
+  const extensionLogin = () => {
+    const token = sessionStorage.getItem('Access-Token');
+    const defOps = {
+      method: 'POST'
+      , headers: {
+        'Content-Type': 'application/json'
+        , 'Authorization': `Bearer ${token}`
+      }
+    };
+
+    const success = (req, res) => {
+      sessionStorage.setItem('Access-Token', res.payload.accessToken);
+      setLoginInfo();
+      isTimeLeft.value = false; //만료인접여부 초기화
+      changeCloseExtensionPopup(); //팝업생성여부 초기화
+    };
+    common.sendByURIWithOption('/extensionJWTPeriod', defOps, {}, success );
+  };
 
 </script>
 <template>
-    <v-app-bar>
+    <v-app-bar id="main-header" :style="{ left: mainStore.drawer ? `${mainStore.drawerWidth}px` : '0px', width: mainStore.drawer ? `calc(100% - ${mainStore.drawerWidth}px)` : '100%' }">
       <v-app-bar-nav-icon @click="mainStore.drawer = !mainStore.drawer"></v-app-bar-nav-icon>
-
       <v-app-bar-title></v-app-bar-title>
       <v-spacer></v-spacer>
-
-        <v-btn>
+        <!-- <v-btn>
           {{loginInfo.sub}}
-        </v-btn>
-        <span>
-          <span class="mdi mdi-alarm"></span>
-          <span>{{remainTime}}</span>
+        </v-btn> -->
+        <span class="me-4">
+          {{loginInfo.sub}}
         </span>
+        <span>
+          <!-- <span class="mdi mdi-alarm"></span>
+          <span>{{remainTime}}</span> -->
+          <v-btn :variant="isTimeLeft ? 'outlined':'text'" 
+                 :color="isTimeLeft ? 'error':'dark'" 
+                 prepend-icon="mdi-alarm"
+                 @click="extensionLogin">
+            {{remainTime}} 연장
+          </v-btn>
+        </span>
+        <v-btn variant="tonal" color="dark" size="small" @click="logout">
+          로그아웃
+        </v-btn>
         <v-btn icon>
           <v-icon>mdi-dots-vertical</v-icon>
+          <v-menu activator="parent">
+            <v-list class="bg-black opacity-70">
+              <v-list-item max-width="300">
+                <v-list-item-title class="text-wrap text-body-2">
+                  <v-row align="center">
+                    <v-col cols="5">역할</v-col>
+                    <v-divider vertical></v-divider>
+                    <v-col>{{loginInfo.roles}}</v-col>
+                  </v-row>
+                  <v-row align="center">
+                    <v-col cols="5">로그인일시</v-col>
+                    <v-divider vertical></v-divider>
+                    <v-col>{{loginInfo.loginDtm}}</v-col>
+                  </v-row>
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </v-btn>
     </v-app-bar>
 </template>

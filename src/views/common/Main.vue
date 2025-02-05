@@ -6,8 +6,8 @@
 
 <template>
   <v-app>
-      <Navi />
       <Header />
+      <Navi />
       <Main />
   </v-app>
 </template>

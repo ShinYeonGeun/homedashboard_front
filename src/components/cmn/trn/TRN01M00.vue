@@ -3,28 +3,36 @@
     <!-- 검색 영역 -->
     <div class="search-area" align="center">
       <TextField
-        label="이용자 ID"
+        label="거래코드"
         variant="outlined"
         density="compact"
         hide-details
         class="flex-grow-1 me-2"
-        v-model="schUid"
+        v-model="schTrnCd"
       />
-      <!-- <v-btn icon class="me-2">
-        <v-icon>mdi-magnify</v-icon>
-      </v-btn> userStateItems-->
-      <Selectbox
-        :items="userStateItems" 
-        item-title = "codeValCtnt"
-        item-value = "codeVal"
-        v-model="schUserState"
-        label="이용자상태"
+      <TextField
+        label="거래명"
         variant="outlined"
         density="compact"
         hide-details
-        class="me-2"
-        emptyText="전체"
-        emptyValue=""
+        class="flex-grow-1 me-2"
+        v-model="schTrnNm"
+      />
+      <TextField
+        label="서비스명"
+        variant="outlined"
+        density="compact"
+        hide-details
+        class="flex-grow-1 me-2"
+        v-model="schSvcNm"
+      />
+      <TextField
+        label="메소드명"
+        variant="outlined"
+        density="compact"
+        hide-details
+        class="flex-grow-1 me-2"
+        v-model="schMtdNm"
       />
       <Selectbox
         :items="delYnItems"
@@ -62,9 +70,9 @@
     <!-- 본문 영역 -->
     <v-row class="content-area">
       <!-- 왼쪽 데이터 테이블 -->
-      <div class="fx1 overflow-hidden" id="userListTableWrapper">
-        <div id="userListHeader" class="data-table-header">
-          <h2 class="data-table-title">회원목록</h2>
+      <div class="fx1 overflow-hidden" id="trnCdListTableWrapper">
+        <div id="trnCdListHeader" class="data-table-header">
+          <h2 class="data-table-title">거래코드목록</h2>
           <span class="data-table-header-count">({{pageInfo.count}} / {{pageInfo.totalCnt}})</span>
           <v-spacer></v-spacer>
           <div>
@@ -76,11 +84,11 @@
             </v-btn>
           </div>
         </div>
-        <div class="data-table" id="userListTable" ref="userListTable" @scroll="loadMore">
+        <div class="data-table" id="trnCdListTable" ref="trnCdListTable" @scroll="loadMore">
           <v-data-table-virtual
             :headers="headers"
-            :items="userList"
-            item-value="uid"
+            :items="trnCdList"
+            item-value="trnCd"
             class="fixed-table"
             :loading="gridLoading"
             loading-text="조회중입니다. 잠시만 기다려주세요."
@@ -88,26 +96,10 @@
             :items-per-page="pageInfo.pageSize"
             show-select
             disable-sort
-            v-model="userItemList"
+            v-model="trnCdItemList"
             @click:row="onRowClick"
             height="650"
-          >
-            <template v-slot:[`item.pswdErrCnt`]="{ item }">
-              <span>{{ common.evl(item.pswdErrCnt, 0) }}</span>
-            </template>
-            <template v-slot:[`item.userState`]="{ item }">
-              <Selectbox
-              :items="userStateItems"
-              item-title = "codeValCtnt"
-              item-value = "codeVal"
-              v-model="item.userState"
-              variant="outlined"
-              density="compact"
-              formatter="v:t"
-              hide-details
-              readonly
-              />
-            </template>
+          >            
             <template v-slot:[`item._row`]="{ item, index }">
               <span>{{index + 1}}</span>
             </template>
@@ -124,26 +116,24 @@
       </div>
       <v-divider vertical></v-divider>
       <!-- 오른쪽 탭 영역 -->
-      <div class="fx1 overflow-auto d-flex flex-column">
-        <v-tabs v-model="tab">
+        <div class="fx1 overflow-auto d-flex flex-column">
+        <v-tabs v-model="tab" grow>
           <v-tab :value="0">회원정보</v-tab>
           <v-tab :value="1">역할정보</v-tab>
           <v-tab :value="2">연락처정보</v-tab>
         </v-tabs>
-        <!-- usr01M00TabContentWrapper -->
-        <v-tabs-window v-model="tab" id="" class="h-100">
+        <v-tabs-window v-model="tab" class="h-100">
           <v-tabs-window-item :value="0" class="h-100 pt-4">
             <v-card flat>
               <v-card-title>
-                회원상세정보 {{userItem.uid}}
+                회원상세정보
               </v-card-title>
               <v-card-actions class="d-flex justify-end">
-                <!-- :disabled="common.isEmpty(selectedUserItemRow) ? !isDupCheck : false" -->
                 <v-btn color="primary" 
                        variant="outlined" 
                        append-icon="mdi-content-save" 
                        size="small" 
-                       :disabled="!isDupCheck"
+                       :disabled="common.isEmpty(selectedTrnCdItemRow) ? !isDupCheck : false"
                        @click="save">
                       저장
                 </v-btn>
@@ -153,7 +143,7 @@
                 <v-btn color="primary" variant="outlined" append-icon="mdi-lock-reset" size="small">
                       비밀번호 초기화
                 </v-btn>
-                <v-btn :color="common.colorList.REFRESH_BUTTON" variant="outlined" append-icon="mdi-refresh" size="small" @click="userInfoInit">
+                <v-btn :color="common.colorList.REFRESH_BUTTON" variant="outlined" append-icon="mdi-refresh" size="small" @click="trnCdInfoInit">
                       초기화
                 </v-btn>
               </v-card-actions>
@@ -162,15 +152,15 @@
                   <v-col>
                     <!-- 아이디 입력 -->
                     <TextField
-                      label="이용자 ID"
-                      v-model="userItem.uid"
-                      :error="errorState.uid"
+                      label="거래코드"
+                      v-model="trnCdItem.trnCd"
+                      :error="errorState.trnCd"
                       variant="outlined"
                       dense
                       density="compact"
                       clearable
                       hide-details
-                      :readonly="userIdLock"
+                      :readonly="trnCdLock"
                       required
                     >
                        <template v-slot:append>
@@ -178,45 +168,77 @@
                                    variant="outlined" 
                                    append-icon="mdi-magnify" 
                                    :disabled="isDupCheck"
-                                   @click="dupCheck" :readonly="userIdLock">
+                                   @click="dupCheck" :readonly="trnCdLock">
                                 중복검사
                           </v-btn>
                        </template>
                     </TextField>
-                    <p class="text-grey-darken-1 mt-2">
-                      &#42; 아이디는 영문 또는 영어, 숫자, 특수문자 중 2가지 조합으로 구성, 특수문자는 !,@,#,$,%,^,&amp;,*,-_. 만 허용되며 동일문자 4회 이상 불가능합니다.
-                    </p>
-                    <p class="text-error mt-2">
-                      {{uidValidMsg}}
-                    </p>
+                  </v-col>
+                  <v-col>
+                    <TextField
+                      label="거래명"
+                      v-model="trnCdItem.trnNm"
+                      :error="errorState.trnNm"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      clearable
+                      hide-details
+                      required
+                    />
                   </v-col>
                 </v-row>
-                
                 <v-row>
                   <v-col>
-                    <Selectbox
-                      :items="userStateItems"
-                      item-title = "codeValCtnt"
-                      item-value = "codeVal"
-                      v-model="userItem.userState"
-                      :error="errorState.userState"
-                      label="이용자상태"
+                    <TextField
+                      label="서비스명"
+                      v-model="trnCdItem.svcNm"
+                      :error="errorState.svcNm"
                       variant="outlined"
+                      dense
                       density="compact"
-                      formatter="v:t"
+                      clearable
                       hide-details
-                      emptyText=" "
-                      emptyValue=""
-                      emptyMode="prepend"
                       required
-                      />
+                    />
+                  </v-col>
+                  <v-col>
+                    <TextField
+                      label="메소드명"
+                      v-model="trnCdItem.mtdNm"
+                      :error="errorState.mtdNm"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      clearable
+                      hide-details
+                      required
+                    />
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <TextField
+                      label="타임아웃(ms)"
+                      v-model="trnCdItem.tmotMs"
+                      :error="errorState.tmotMs"
+                      variant="outlined"
+                      dataType="formatNumber"
+                      dense
+                      density="compact"
+                      clearable
+                      hide-details
+                      suffix="(ms)"
+                      class="text-right"
+                      required
+                    />
                   </v-col>
                   <v-col>
                     <Selectbox
                       :items="delYnItems"
                       item-title = "codeValCtnt"
                       item-value = "codeVal"
-                      v-model="userItem.delYn"
+                      v-model="trnCdItem.delYn"
                       :error="errorState.delYn"
                       label="삭제여부"
                       variant="outlined"
@@ -233,7 +255,7 @@
                   <v-col>
                     <TextField
                       label="최종로그인일시"
-                      v-model="userItem.lastLoginDtm"
+                      v-model="trnCdItem.lastLoginDtm"
                       dataType="datetime"
                       variant="outlined"
                       dense
@@ -246,7 +268,7 @@
                   <v-col>
                     <TextField
                       label="최종거래UUID"
-                      v-model="userItem.lastTrnUUID"
+                      v-model="trnCdItem.lastTrnUUID"
                       variant="outlined"
                       dense
                       density="compact"
@@ -260,7 +282,7 @@
                     <TextField
                       label="최종거래일시"
                       dataType="datetime"
-                      v-model="userItem.lastTrnDtm"
+                      v-model="trnCdItem.lastTrnDtm"
                       variant="outlined"
                       dense
                       density="compact"
@@ -272,7 +294,7 @@
                   <v-col>
                     <TextField
                       label="최종거래사용자"
-                      v-model="userItem.lastTrnUid"
+                      v-model="trnCdItem.lastTrnUid"
                       variant="outlined"
                       dense
                       density="compact"
@@ -331,20 +353,21 @@ import * as common from '@/utils/common'
 import Selectbox from '@/components/common/Selectbox.vue'
 import TextField from '@/components/common/TextField.vue'
 
-const schUid = ref(''); //검색조건 이용자ID
-const schUserState = ref(''); //검색조건 이용자상태
+const schTrnCd = ref('');
+const schTrnNm = ref('');
+const schSvcNm = ref('');
+const schMtdNm = ref('');
 const schDelYn = ref(''); //검색조건 삭제여부
-const userStateItems = ref(common.getCommCodeItems('USER_STATE'));
 const delYnItems = ref(common.getCommCodeItems('YN'));
-const userItemList = ref(null); //그리드에서 체크된 Row의 key 배열
-const userListTable = ref(null); //회원목록 <table> ref
-const userItem = ref({}); //그리드에서 클릭된 Row의 데이터
-const selectedUserItemRow = ref({});
-const userIdLock = ref(false);
+const trnCdItemList = ref(null); //그리드에서 체크된 Row의 key 배열
+const trnCdListTable = ref(null); //회원목록 <table> ref
+const trnCdItem = ref({}); //그리드에서 클릭된 Row의 데이터
+const selectedTrnCdItemRow = ref({});
+const trnCdLock = ref(false);
 const isDupCheck = ref(false);
 const dupCheckUid = ref(''); //중복검사 통과한 ID
 const tab = ref(0);
-const userList = ref([]);
+const trnCdList = ref([]);
 const gridLoading = ref(false);
 const errorState = ref({}); //회원상세 input error state 관리
 
@@ -358,14 +381,13 @@ const pageInfo = ref({
   last: false
 });
 
-const uidValidMsg = ref('미입력');
-
 const headers = [
   {key:"_row", title:"No",width:60, sortable: false},
-  { key: "uid", title: "이용자ID", width:200, headerProps:{'class':'text-center'}},
-  { key: "pswdErrCnt", title: "PW오류(건)", align:' d-none', width:80},
-  { key: "userState", title: "상태", width:160, headerProps:{'class':'text-center'}},
-  { key: "lastLoginDtm", title: "최종로그인일자", align:'center', width:200, headerProps:{'class':'text-center'} },
+  { key: "trnCd", title: "거래코드", width:200, headerProps:{'class':'text-center'}},
+  { key: "trnNm", title: "거래명", align:' d-none', width:80},
+  { key: "svcNm", title: "서비스명", width:160, headerProps:{'class':'text-center'}},
+  { key: "mtdNm", title: "메소드명", align:'center', width:200, headerProps:{'class':'text-center'} },
+  { key: "tmotMs", title: "타임아웃(ms)", align:'center', width:200, headerProps:{'class':'text-center'} },
   { key: "delYn", title: "삭제", width:90, align:'center', headerProps:{'class':'text-center'} },
   { key: "lastTrnUUID", title: "최종거래UUID", align:' d-none', width:80 },
   { key: "lastTrnDtm", title: "최종거래일시", align:'center', width:180, headerProps:{'class':'text-center'} },
@@ -373,7 +395,7 @@ const headers = [
 ];
 
 const loadMore = async (e) => {
-  const container = userListTable.value;
+  const container = trnCdListTable.value;
   const scrollBottom = container.scrollTop + container.clientHeight;
   const isAtBottom = scrollBottom >= container.scrollHeight; // 약간의 오차 허용
 
@@ -387,8 +409,10 @@ const loadMore = async (e) => {
 
 const onSearch = async (pageNo) => {
   const params = {
-      'uid': schUid.value
-      , 'userState': schUserState.value.codeVal
+        'trnCd' : schTrnCd.value
+      , 'trnNm' : schTrnNm.value
+      , 'svcNm' : schSvcNm.value
+      , 'mtdNm' : schMtdNm.value
       , 'delYn': schDelYn.value.codeVal
   };
 
@@ -399,7 +423,7 @@ const onSearch = async (pageNo) => {
     pageInfo.value.count = 0;
     pageInfo.value.first = true;
     pageInfo.value.last = false;
-    userList.value = [];
+    trnCdList.value = [];
   }else{
     pageInfo.value.pageNo = pageNo;
   }
@@ -412,17 +436,17 @@ const onSearch = async (pageNo) => {
   
   gridLoading.value = true;
 
-  await common.sendByTrnCd('USR00001', params, (d,r)=> {
-      if(!r.payload.userList.empty){
+  await common.sendByTrnCd('TRN10001', params, (d,r)=> {
+      if(!r.payload.trnCdList.empty){
         pageInfo.value.totalCnt = r.payload.totalElements;
         pageInfo.value.totalPages = r.payload.totalPages;
         pageInfo.value.first = r.payload.first;
         pageInfo.value.last = r.payload.last;
         pageInfo.value.count = pageInfo.value.count + r.payload.numberOfElements;
-        userList.value.push(... r.payload.userList);
+        trnCdList.value.push(... r.payload.trnCdList);
       }
   }, (params, res)=>{
-      common.showSnackbar(`사용자 목록 조회 중 오류가 발생되었습니다.`, "red", 2000);
+      common.showSnackbar(`거래코드 목록 조회 중 오류가 발생되었습니다.`, "red", 2000);
   });
 
   gridLoading.value = false;
@@ -432,34 +456,32 @@ const onSearch = async (pageNo) => {
 const onRowClick = (event, row) => {
   const className = `bg-${common.colorList.GRID_SELECTED_ROW}`;
   const target = event.target
-  let isChanged = false;
-  userItem.value = { ...row.item}; // 클릭된 행 데이터 저장
+  let isChanged = false; //row.item.trnCd !== selectedTrnCdItemRow.value.trnCd;
+  trnCdItem.value = { ...row.item}; // 클릭된 행 데이터 저장
 
-  if(common.isEmpty(selectedUserItemRow.value.element)) {
+  if(common.isEmpty(selectedTrnCdItemRow.value.element)) {
     isChanged = true;
   } else {
-    isChanged = row.item.uid !== selectedUserItemRow.value.id;
-    common.removeClass(selectedUserItemRow.value.element, [className]);
+    isChanged = row.item.trnCd !== selectedTrnCdItemRow.value.item.trnCd
+    common.removeClass(selectedTrnCdItemRow.value.element, [className]);
   }
 
   //선택한 값이 변경되었으면 button readonly 해제
-  userIdLock.value = isChanged;
+  trnCdLock.value = isChanged;
 
   if(isChanged) {
-    selectedUserItemRow.value.element = target.parentElement;
-    selectedUserItemRow.value.id = row.item.uid;
-    selectedUserItemRow.value.item = { ...row.item};
-    common.addClass(selectedUserItemRow.value.element, [className]);
+    selectedTrnCdItemRow.value.element = target.parentElement;
+    selectedTrnCdItemRow.value.id = row.item.trnCd;
+    selectedTrnCdItemRow.value.item = row.item;
+    common.addClass(selectedTrnCdItemRow.value.element, [className]);
   }else{
-    console.log("#####")
-    selectedUserItemRow.value = {};
-    userItem.value = {}; //선택된 데이터 초기화
+    selectedTrnCdItemRow.value = {};
+    trnCdItem.value = {}; //선택된 데이터 초기화
   }
-
 };
 
 const dupCheck = async () => {
-  const params = {'uid':userItem.value.uid}
+  const params = {'uid':trnCdItem.value.trnCd}
 
   if(!uidRegexCheck()) {
     common.errorAlert("이용자ID를 확인해주세요.")
@@ -470,12 +492,10 @@ const dupCheck = async () => {
   await common.sendByTrnCd('USR00003', params, (req,res)=> {
       if(res.payload.count === 0) {
         common.infoAlert('사용가능한 ID입니다.');
-        uidValidMsg.value = "등록가능";
         isDupCheck.value = true;
         dupCheckUid.value = req.uid;
       } else {
         common.errorAlert('사용할 수 없는 ID입니다.');
-        uidValidMsg.value = "등록불가(중복ID 존재)";
         isDupCheck.value = false;
       }
   }, (req, res)=>{
@@ -484,13 +504,23 @@ const dupCheck = async () => {
 };
 
 const init = () => {
-  let contentHeight = 0;
+  // let contentHeight = 0;
   // common.commonAdjustHeight();
-  // common.adjustHeight({ target: "#userListTableWrapper"
-  //                     , base: ".app-container"
-  //                     , excludes: [".search-area"] 
-  //                     , reduce:100
-  //                     });
+//   common.adjustHeight({ target: "#trnCdListTableWrapper"
+//                       , base: ".app-container"
+//                       , excludes: [".search-area"] 
+//                       , reduce:100
+//                       });
+
+//   contentHeight = common.adjustHeight({ 
+//                         target: "#trnCdListTable"
+//                       , base: "#trnCdListTableWrapper"
+//                       , excludes: ["#trnCdListHeader"] 
+//                       , reduce:50
+//                       });
+// console.log("h", contentHeight);
+//   document.querySelector("#trnCdTabContentWrapper").style.height = `${contentHeight}px`;
+
 
   // contentHeight = common.adjustHeight({ 
   //                       target: "#userListTable"
@@ -499,60 +529,66 @@ const init = () => {
   //                     , reduce:50
   //                     });
 
-  // document.querySelector("#userTabContentWrapper").style.height = `${contentHeight}px`;
+  // document.querySelector("#tabContentWrapper").style.height = `${contentHeight}px`;
 
-  schUid.value = ''; //검색조건 이용자ID
-  schUserState.value = ''; //검색조건 이용자상태
-  schDelYn.value = ''; //검색조건 삭제여부 
-  userList.value = [];
-  userItemList.value = [];
-  tab.value = 0;
-  gridLoading.value = false
-  pageInfo.value.pageNo = 0;
-  pageInfo.value.pageSize = 20;
-  pageInfo.value.totalCnt = 0;
-  pageInfo.value.totalPages = 0;
-  pageInfo.value.count = 0;
-  pageInfo.value.first = true;
-  pageInfo.value.last = false;
+  // schTrnCd.value = '';
+  // schTrnNm.value = '';
+  // schSvcNm.value = '';
+  // schMtdNm.value = '';
+  // schDelYn.value = ''; //검색조건 삭제여부 
+  // trnCdList.value = [];
+  // trnCdItemList.value = [];
+  // tab.value = 0;
+  // gridLoading.value = false
+  // pageInfo.value.pageNo = 0;
+  // pageInfo.value.pageSize = 20;
+  // pageInfo.value.totalCnt = 0;
+  // pageInfo.value.totalPages = 0;
+  // pageInfo.value.count = 0;
+  // pageInfo.value.first = true;
+  // pageInfo.value.last = false;
 
-  userInfoInit();
-  errorStateInit();
+  // trnCdInfoInit();
+  // errorStateInit();
 };
 
 const errorStateInit = () => {
   errorState.value = {
-                      uid:null,
-                      userState:null,
+                      trnCd:null,
+                      trnNm:null,
+                      svcNm:null,
+                      mtdNm:null,
                       delYn:null,
                     };
 }
 
-const userInfoInit = () => {
-  userIdLock.value = false;
-  userItem.value = {};
+const trnCdInfoInit = () => {
+  trnCdLock.value = false;
+  trnCdItem.value = {};
   //회원목록 선택행 css 조정
-  if(!common.isEmpty(selectedUserItemRow.value.element)){
-    common.removeClass(selectedUserItemRow.value.element, [`bg-${common.colorList.GRID_SELECTED_ROW}`]);
+  if(!common.isEmpty(selectedTrnCdItemRow.value.element)){
+    common.removeClass(selectedTrnCdItemRow.value.element, [`bg-${common.colorList.GRID_SELECTED_ROW}`]);
   }
-  selectedUserItemRow.value = {}; //선택행 초기화
+  selectedTrnCdItemRow.value = {}; //선택행 초기화
   isDupCheck.value = false;
   dupCheckUid.value = '';
-  uidValidMsg.value = '미입력';
+
   errorStateInit();
 };
 
 const userInfoErrStateChg = () => {
-  errorState.value.uid = common.isEmpty(userItem.value.uid) ? null:common.isEmpty(userItem.value.uid);
-  errorState.value.userState = common.isEmpty(userItem.value.userState) ? null:common.isEmpty(userItem.value.userState);
-  errorState.value.delYn = common.isEmpty(userItem.value.delYn) ? null:common.isEmpty(userItem.value.delYn);
+  errorState.value.trnCd = common.isEmpty(trnCdItem.value.trnCd) ? null:common.isEmpty(trnCdItem.value.trnCd);
+  errorState.value.trnNm = common.isEmpty(trnCdItem.value.trnNm) ? null:common.isEmpty(trnCdItem.value.trnNm);
+  errorState.value.svcNm = common.isEmpty(trnCdItem.value.svcNm) ? null:common.isEmpty(trnCdItem.value.svcNm);
+  errorState.value.mtdNm = common.isEmpty(trnCdItem.value.mtdNm) ? null:common.isEmpty(trnCdItem.value.mtdNm);
+  errorState.value.delYn = common.isEmpty(trnCdItem.value.delYn) ? null:common.isEmpty(trnCdItem.value.delYn);
 };
 
 const save = async () => {
   let msg = "수정";
   let tranCd = "USR00005";
   //선택된 아이템이 없으면 등록으로 간주.
-  if(common.isEmpty(selectedUserItemRow.value)) {
+  if(common.isEmpty(selectedTrnCdItemRow.value)) {
     msg = "등록";
     tranCd = "USR00004";
     if(!isDupCheck.value) {
@@ -563,8 +599,8 @@ const save = async () => {
     userInfoErrStateChg();
 
     common.confirm(`${msg}하시겠습니까?`, async () =>{
-      await common.sendByTrnCd(tranCd, userItem.value, (req,res)=> {
-          common.infoAlert(`${msg}되었습니다.`, userInfoInit());
+      await common.sendByTrnCd(tranCd, trnCdItem.value, (req,res)=> {
+          common.infoAlert(`${msg}되었습니다.`, trnCdInfoInit());
       }, (req, res)=>{
           common.errorAlert(res.payload);
       });
@@ -576,30 +612,32 @@ onMounted(() => {
   init();
 });
 
-const needDupCheck = () => dupCheckUid.value !== userItem.value.uid;
+const needDupCheck = () => dupCheckUid.value !== trnCdItem.value.uid;
 
-watch( userItem, (newItem, oldItem) => {
+watch( trnCdItem, (newItem, oldItem) => {
 
   if(!common.isEmpty(newItem)) {
     userInfoErrStateChg();
   }
-
-  if(common.isEmpty(selectedUserItemRow.value)) {
+  
+  if(common.isEmpty(selectedTrnCdItemRow.value)) {
     //등록
-    uidRegexCheck();
-    isDupCheck.value = !needDupCheck();
+    // uidRegexCheck();
+    // isDupCheck.value = !needDupCheck();
   } else {
 
     //수정일 때 변경분 표시
-    const keys = Object.keys(userItem.value);
+    const keys = Object.keys(trnCdItem.value);
 
     for(const k of keys) {
       switch(k){
-        case 'uid':
-        case 'userState':
+        case 'trnCd':
+        case 'trnNm':
+        case 'svcNm':
+        case 'mtdNm':
         case 'delYn':
           //변경분 표시
-          errorState.value[k] = selectedUserItemRow.value.item[k] !== userItem.value[k];
+          errorState.value[k] = selectedTrnCdItemRow.value.item[k] !== trnCdItem.value[k];
           break;
         default:break;
       }
@@ -621,24 +659,22 @@ const uidRegexCheck = () => {
   // {2,} → 위의 문자가 3번 이상 반복됨(즉, 총 4회 이상 연속)
   const regexRepeat = /(.)\1{3,}/;
 
-  if(common.evl(userItem.value.uid, '') === "") {
-    uidValidMsg.value = "";
+  if(common.evl(trnCdItem.value.trnCd, '') === "") {
     return false;
   }else{
     //동일 문자 4회 이상 불가, 영문으로만 구성
     //영문 + 숫자(or 특수문자) 또는 숫자 + 특수문자로 구성
     //글자수 5이상 30이하 체크
-    if(( (regextOnlyEng.test(userItem.value.uid)) ||
-        (regexLetter.test(userItem.value.uid) && regexNumber.test(userItem.value.uid)) ||
-        (regexLetter.test(userItem.value.uid) && regexSpecialChar.test(userItem.value.uid)) ||
-        (regexNumber.test(userItem.value.uid) && regexSpecialChar.test(userItem.value.uid))) &&
-        regexLength.test(userItem.value.uid) &&
-        !regexRepeat.test(userItem.value.uid)
+    if(( (regextOnlyEng.test(trnCdItem.value.uid)) ||
+        (regexLetter.test(trnCdItem.value.uid) && regexNumber.test(trnCdItem.value.uid)) ||
+        (regexLetter.test(trnCdItem.value.uid) && regexSpecialChar.test(trnCdItem.value.uid)) ||
+        (regexNumber.test(trnCdItem.value.uid) && regexSpecialChar.test(trnCdItem.value.uid))) &&
+        regexLength.test(trnCdItem.value.uid) &&
+        !regexRepeat.test(trnCdItem.value.uid)
       ) {
-      uidValidMsg.value = "등록가능 (중복검사에서 중복된 데이터 존재 시 등록 불가)"
+      
       return true;
     }else{
-      uidValidMsg.value = "등록불가"
       return false;
     }
   }

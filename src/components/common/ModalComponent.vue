@@ -1,10 +1,11 @@
 <template>
   <div v-if="visible" class="modal-overlay" @click="handleOverlayClick" transition="false">
     <div class="modal" @click.stop :style="style">
-      <header class="modal-header">
+      <header v-if="!noHeader" class="modal-header">
         <h3>{{ title }}</h3>
         <button v-if="showCloseBtn" class="close-btn" @click="close">X</button>
       </header>
+      <v-divider v-if="!noHeaderDivider"></v-divider>
       <main class="modal-content">
         <!-- 문자열일 경우 -->
         <p v-if="typeof content === 'string'" v-html="content" class="p1"></p>
@@ -15,6 +16,7 @@
           :key="contentId" 
           @close="handleContentClose"></component>
       </main>
+      <v-divider v-if="!noFooterDivider"></v-divider>
       <footer v-if="buttons && buttons.length" class="modal-footer" :class="btnAlign">
         <v-btn
           v-for="(button, index) in buttons"
@@ -35,6 +37,9 @@ import { ref, render, onMounted, onUnmounted, shallowRef, markRaw , nextTick , o
 const props = defineProps({
   id: { type: String, required: true },
   showCloseBtn: { type: Boolean, default: true },
+  noHeader: {type:Boolean, default:false},
+  noHeaderDivider: {type:Boolean, default:false},
+  noFooterDivider: {type:Boolean, default:false},
   title: { type: String, default: "" },
   content: { type: [String, Object], required: false },
   contentProps: { type: Object, default: () => ({}) },
@@ -107,8 +112,6 @@ const handleButtonClick = (button) => {
    // execFunc 메서드가 존재하는지 확인하고 호출
   nextTick(() => {
     // 컴포넌트가 렌더링된 후에 ref에 접근
-    console.log("contentComponentRef", contentComponentRef);
-
     if (contentComponentRef.value) {
       
       // 자식 컴포넌트의 메서드를 호출
@@ -140,7 +143,7 @@ const handleButtonClick = (button) => {
 }
 .modal {
   background: white;
-  padding: 20px;
+  padding: 10px 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   max-width: 100%;
@@ -150,13 +153,12 @@ const handleButtonClick = (button) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd;
   padding-bottom: 10px;
 }
 .modal-footer {
   display: flex;
   gap: 10px;
-  border-top: 1px solid #ddd;
+  /*border-top: 1px solid #ddd;*/
   padding-top: 10px;
 }
 .modal-footer.center {

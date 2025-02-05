@@ -3,6 +3,7 @@ import { useSnackbar } from '@/utils/useSnackbar';
 import { useLoading } from '@/utils/useLoading';
 import { useModal } from '@/utils/useModal';
 import { defineAsyncComponent, markRaw } from 'vue'
+import { useCommonStore } from '@/stores/common/commonStore'
 
 export const rulesReq = (value) => !!value || '필수 입력항목입니다.';
 
@@ -33,10 +34,10 @@ export const send = async (uri, option, data, sccessFunc, errorFunc) => {
 
 		//정상응답 받았으면 처리
 		if (response.ok) {
-			const token = headers.get('Access-Token');
-			if (token) {
-				sessionStorage.setItem('Access-Token', token);
-			}
+			// const token = headers.get('Access-Token');
+			// if (token) {
+			// 	sessionStorage.setItem('Access-Token', token);
+			// }
 
 			if (res.resultCd === 'S' && sccessFunc) {
 				sccessFunc(data, res);
@@ -48,7 +49,7 @@ export const send = async (uri, option, data, sccessFunc, errorFunc) => {
 
 			showSnackbar('시스템 오류가 발생했습니다.', colorList.DANGER);
 
-			console.error(res);
+			console.error("res", res, response);
 
 			if (res.status) {
 				if (res.status == 401) {
@@ -160,8 +161,8 @@ export const ignoreEquals = (s, v) => {
 	return evl(s, "").toLowerCase() === evl(v, "").toLowerCase()
 };
 
-export const getDateString = (date, format) => {
-	return getDateFormat(new Date(date), format);
+export const getDateString = (date, format, emptyChar) => {
+	return isEmpty(date) ? nvl(emptyChar, "") : getDateFormat(new Date(date), format);
 };
 
 export const getDateFormat = (date, format) => {
@@ -199,6 +200,7 @@ export const addClass = (element, classList) => {
 
 export const removeClass = (element, classList) => {
 	const classes = evl(classList, []);
+
 	for (const c of classes) {
 		element.classList.remove(c);
 	}
@@ -238,7 +240,7 @@ export const loginCheck = () => {
 				const curTime = new Date().getTime();
 
 				if (expTime < curTime) {
-					logout();
+					return false;
 				}
 
 				return true;
@@ -246,22 +248,10 @@ export const loginCheck = () => {
 			//헤더 권한
 			// document.getElementById('userInfoLoginRoles').innerText = info.roles;
 		}
-	} else {
-		//login화면으로
-		console.log("login필요~");
 	}
 
 	return false;
 }
-
-export const logout = () => {
-	//clearInterval(loginTimeChecker);
-	//openMenus = [];
-	sessionStorage.removeItem('Access-Token');
-
-	//routeTo('/');
-	//common.loadContent(document.getElementById('wrapper'), '/cmn/usr/Login');
-};
 
 export const showSnackbar = (msg, color, timeout) => {
 	useSnackbar().showSnackbar(msg, color, timeout);
@@ -280,35 +270,75 @@ export const showModal = async (props) => {
 	return await useModal().showModal(props);
 };
 
-export const alert = async (msg, close) => {
+export const alert = async (msg, close, option) => {
 	const props = {
 		content: msg,
 		onClose: close,
 		buttons: [
 			{
 				label: "확인",
-				props: { color: "primary", variant: "outlined" },
-				// onClick: close, 두번호출되어 주석.
+				props: { color: "primary", variant: "outlined", size: "small" },
 				close: true,
 			},
 		]
 	};
+
+	Object.assign(props, option);
+
 	showModal(props);
 };
+
+export const infoAlert = async (msg, close) => {
+	const props = {
+		content: `<span><span class="mdi mdi-information-outline me-2"></span><span>${msg}</span></span>`,
+		noHeader: true,
+		noHeaderDivider: true,
+		noFooterDivider: true,
+		buttons: [
+			{
+				label: "확인",
+				props: { color: "primary", variant: "outlined", size: "small" },
+				close: true,
+			},
+		]
+	};
+	alert(msg, close, props);
+};
+
+export const errorAlert = async (msg, close) => {
+	const props = {
+		content: `<span><span class="mdi mdi-alert-circle-outline me-2"></span><span>${msg}</span></span>`,
+		noHeader: true,
+		noHeaderDivider: true,
+		noFooterDivider: true,
+		buttons: [
+			{
+				label: "확인",
+				props: { color: "error", variant: "outlined", size: "small" },
+				close: true,
+			},
+		]
+	};
+	alert(msg, close, props);
+};
+
 export const confirm = async (msg, yes, no, close) => {
 	const props = {
 		content: msg,
+		noHeader: true,
+		noHeaderDivider: true,
+		noFooterDivider: true,
 		onClose: close,
 		buttons: [
 			{
 				label: "확인",
-				props: { color: "primary", variant: "outlined" },
+				props: { color: "primary", variant: "outlined", size: "small" },
 				onClick: yes,
 				close: true,
 			},
 			{
 				label: "취소",
-				props: { color: "error", variant: "outlined" },
+				props: { color: "error", variant: "outlined", size: "small" },
 				onClick: no,
 				close: true,
 			},
@@ -335,7 +365,11 @@ export const adjustHeight = (props) => {
 	let height = document.querySelector(props.base).offsetHeight;
 
 	for (const i of props.excludes) {
-		height -= document.querySelector(i).offsetHeight;
+		try {
+			height -= document.querySelector(i).offsetHeight;
+		} catch (e) {
+			//오류스킵
+		}
 	}
 
 	if (props.reduce) {
@@ -343,11 +377,20 @@ export const adjustHeight = (props) => {
 	}
 
 	document.querySelector(props.target).style.height = `${height}px`;
+
+	if (evl(props.isMin, false)) {
+		document.querySelector(props.target).style["min-height"] = `${height}px`;
+	}
+
+	if (evl(props.isMax, false)) {
+		document.querySelector(props.target).style["max-height"] = `${height}px`;
+	}
+
+	return height;
 }
 
 export const commonAdjustHeight = () => {
-	//adjustHeight(".app-container", "#content-wrap", ".search-area");
-	adjustHeight({ target: ".app-container", base: "#content-wrap", excludes: [".search-area"] });
+	return adjustHeight({ target: ".app-container", base: "#content-wrap", excludes: [".search-area"] });
 }
 
 export const searchComCodeList = async ({
@@ -357,7 +400,6 @@ export const searchComCodeList = async ({
 }) => {
 	let codes = {};
 	await sendByTrnCd('CCD00101', { codeList: ['USER_STATE'] }, (d, r) => {
-		console.log("CCD00101", r);
 		if (r.resultCd === 'S') {
 			Object.assign(codes, r.payload);
 		} else {
@@ -373,7 +415,39 @@ export const searchComCodeList = async ({
 };
 
 export const colorList = {
-	EXCEL_DOWNLOAD: 'green-darken-4',
-	DANGER: 'red-darken-2',
+	EXCEL_DOWNLOAD: '#217346',
+	DANGER: '#b71c1c',
 	REFRESH_BUTTON: 'grey-darken-1',
+	GRID_SELECTED_ROW: 'grey-lighten-3'
 }
+
+// 깊은 복사 함수
+export const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
+
+export const getCommCodeData = (commonCode) => {
+	return useCommonStore().getCommCodeData(commonCode);
+};
+
+export const getCommCodeItems = (commonCode) => {
+	const commCodeData = useCommonStore().getCommCodeData(commonCode);
+	return isEmpty(commCodeData) ? [] : commCodeData.codeList;
+};
+
+export const getLoginId = () => useCommonStore().loginId;
+
+export const isNumber = (v) => /^([+-]?)(\d*)(\.?\d*)$/.test(v);
+
+/**
+ * 맨 앞 부호, 그 후에는 숫자 or 소수점 제외하고 전부 제거
+ */
+export const cleanNumber = (input) => {
+	return evl(input, '').toString().replace(/[^0-9.+-]/g, "").replace(/^([-+]?)(.*)/, (_, sign, number) => sign + number.replace(/[^0-9.]/g, ""));
+};
+
+/**
+ * 숫자 천단위 콤마
+ */
+export const numberFormat = (num) => {
+	num = cleanNumber(num);
+	return num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
+};
