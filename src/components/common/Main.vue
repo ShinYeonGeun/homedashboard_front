@@ -1,24 +1,53 @@
 <script setup>
     import { useMainStore } from '@/stores/common/main' 
+    import { useCommonStore } from '@/stores/common/commonStore' 
     import * as common from '@/utils/common'
     import { onMounted, computed, ref, watch  } from 'vue';
     import { useRouter } from 'vue-router';
     import Selectbox from '@/components/common/Selectbox.vue'
     
     const mainStore = useMainStore();
+    const commonStore = useCommonStore();
     const router = useRouter();
     const activeTab = "";
 
     const commCodeInfo = ref({});
     const userState = ref([]);
-const userStateModel = ref({});
+    const userStateModel = ref({});
     onMounted(async () => {
       // 초기 경로를 설정
       router.push('/');
+      common.adjustHeight({ target: "#main-wrap"
+                      , base: "#app"
+                      , excludes: ["#main-header"] 
+                      , reduce:document.querySelector("#main-header").offsetHeight
+                      });
+      common.adjustHeight({ target: "#content-wrap"
+                      , base: "#app"
+                      , excludes: ["#main-header"] 
+                      , reduce:document.querySelector("#main-header").offsetHeight
+                      , isMin:true
+                      , isMax:true
+                      });
 
+      // window.addEventListener('resize', ()=>{
+      //   common.adjustHeight({ target: "#content-wrap"
+      //                 , base: "#app"
+      //                 , excludes: ["#tab-wrap"] 
+      //                 , reduce:document.querySelector("#content-wrap").offsetTop
+      //                 });
+      // });
+      document.querySelector("#main-wrap").style.top = `${document.querySelector("#main-header").offsetHeight}px`;
       //로그인 체크
-      if(!common.loginCheck()) {
-        router.push({path:'/cmn/Login'});
+      //헤더에서해서 굳이 필요 없음.
+      // if(!common.loginCheck()) {
+      //   router.push({path:'/cmn/Login'});
+      // }
+
+      if (common.isEmpty(commonStore.commCodeInfo)) {
+        await common.sendByTrnCd('CCD00101', { }, (d, r) => {
+          commonStore.commCodeInfo = r.payload
+        });
       }
 
       //common.hideLoading();
@@ -26,8 +55,6 @@ const userStateModel = ref({});
       //공통코드 조회
       commCodeInfo.value = await common.searchComCodeList({codeList:['USER_STATE']});
       userState.value.push(... commCodeInfo.value.USER_STATE.codeList);
-      console.log(">>>commCodeInfo.value", commCodeInfo.value);
-      console.log(">>>commCodeInfo.value", userState.value);
     });
 
     const openSnackbar = () => {
@@ -119,115 +146,114 @@ const userStateModel = ref({});
 </script>
 
 <template>
-    <v-main>
-      <div id="main-wrap">
-        <div id="tab-wrap">
-          <v-tabs v-model="mainStore.activeTab">
-             <!-- 고정된 첫 번째 탭 -->
-            <v-tab :value="0" color="primary" class="bg-white">
-              고정된 탭
-            </v-tab>
-            <v-tab v-for="tab of mainStore.tabs" :key="tab.id" :value="tab.id" color="primary" class="bg-white">
-              {{ tab.name }}
-              <v-btn variant="text"
-              icon density="compact"
-                @click.stop="mainStore.removeTab(tab.id)"
-                class="ml-2"
-              >
-                <v-icon>mdi-close</v-icon>
+    <v-main id="main-wrap" class="position-relative"
+        :style="{ left: mainStore.drawer ? `${mainStore.drawerWidth}px` : '0px', width: mainStore.drawer ? `calc(100% - ${mainStore.drawerWidth}px)` : '100%' }">
+      <div id="tab-wrap">
+        <v-tabs v-model="mainStore.activeTab">
+            <!-- 고정된 첫 번째 탭 -->
+          <v-tab :value="0" color="primary" class="bg-white">
+            고정된 탭
+          </v-tab>
+          <v-tab v-for="tab of mainStore.tabs" :key="tab.id" :value="tab.id" color="primary" class="bg-white">
+            {{ tab.name }}
+            <v-btn variant="text"
+            icon density="compact"
+              @click.stop="mainStore.removeTab(tab.id)"
+              class="ml-2"
+            >
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-tab>
+        </v-tabs>
+      </div>
+      <v-divider></v-divider>
+      <div id="content-wrap">
+        <!-- 탭 내용 -->
+        <v-tabs-window v-model="mainStore.activeTab" class="h-100">
+        <!-- 고정된 첫 번째 탭의 내용 -->
+        <v-tabs-window-item :value="0">
+          <div>고정된 탭 내용
+            <div class="w300">
+              <v-btn
+                    block
+                    color="primary"
+                    class="mt-4"
+                    @click="openDialog"
+                  >
+                    모달 샘플
               </v-btn>
-            </v-tab>
-          </v-tabs>
-        </div>
-        <v-divider></v-divider>
-        <div id="content-wrap">
-          <!-- 탭 내용 -->
-           <v-tabs-window v-model="mainStore.activeTab">
-          <!-- 고정된 첫 번째 탭의 내용 -->
-          <v-tabs-window-item :value="0">
-            <div>고정된 탭 내용
-              <div class="w300">
-                <v-btn
-                      block
-                      color="primary"
-                      class="mt-4"
-                      @click="openDialog"
-                    >
-                      모달 샘플
-                </v-btn>
-                <v-btn
-                      block
-                      color="primary"
-                      class="mt-4"
-                      @click="() => {
-                        common.alert('text~~~~', alertClose);
-                      }"
-                    >
-                      alert
-                </v-btn>
-                <v-btn
-                      block
-                      color="primary"
-                      class="mt-4"
-                      @click="() => {
-                        common.confirm('text~~~~', confirmYes, confirmNo, alertClose);
-                      }"
-                    >
-                      confirm
-                </v-btn>
-                <v-btn
-                      block
-                      color="primary"
-                      class="mt-4"
-                      @click="() => {
-                        common.openPopup('/common/POPUP_SAMPLE'
-                                        , popupBtn
-                                        , confirmYes
-                                        , confirmNo);
-                      }"
-                    >
-                      레이어팝업
-                </v-btn>
-                <v-btn
-                      block
-                      color="primary"
-                      class="mt-4"
-                      @click="() => {
-                        common.openPopup('/common/POPUP_SAMPLE2'
-                                        , popupBtn2
-                                        , confirmYes
-                                        , confirmNo);
-                      }"
-                    >
-                      레이어팝업2
-                </v-btn>
-                <v-btn
-                  block
-                  color="primary"
-                  class="mt-4"
-                  @click="openSnackbar"
-                >
-                스낵바 샘플
-                </v-btn>
-                <Selectbox
-                  :items="userState"
-                  item-title = "codeValCtnt"
-                  item-value = "codeVal"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  v-model="userStateModel"
-                />
-              </div>
+              <v-btn
+                    block
+                    color="primary"
+                    class="mt-4"
+                    @click="() => {
+                      common.alert('text~~~~', alertClose);
+                    }"
+                  >
+                    alert
+              </v-btn>
+              <v-btn
+                    block
+                    color="primary"
+                    class="mt-4"
+                    @click="() => {
+                      common.confirm('text~~~~', confirmYes, confirmNo, alertClose);
+                    }"
+                  >
+                    confirm
+              </v-btn>
+              <v-btn
+                    block
+                    color="primary"
+                    class="mt-4"
+                    @click="() => {
+                      common.openPopup('/common/POPUP_SAMPLE'
+                                      , popupBtn
+                                      , confirmYes
+                                      , confirmNo);
+                    }"
+                  >
+                    레이어팝업
+              </v-btn>
+              <v-btn
+                    block
+                    color="primary"
+                    class="mt-4"
+                    @click="() => {
+                      common.openPopup('/common/POPUP_SAMPLE2'
+                                      , popupBtn2
+                                      , confirmYes
+                                      , confirmNo);
+                    }"
+                  >
+                    레이어팝업2
+              </v-btn>
+              <v-btn
+                block
+                color="primary"
+                class="mt-4"
+                @click="openSnackbar"
+              >
+              스낵바 샘플
+              </v-btn>
+              <Selectbox
+                :items="userState"
+                item-title = "codeValCtnt"
+                item-value = "codeVal"
+                variant="outlined"
+                density="compact"
+                hide-details
+                v-model="userStateModel"
+              />
             </div>
-          </v-tabs-window-item>
+          </div>
+        </v-tabs-window-item>
 
-          <!-- 동적으로 추가되는 탭들의 내용 -->
-          <v-tabs-window-item v-for="tab of mainStore.tabs" :key="tab.id" :value="tab.id">
-            <component :is="tab.component" />
-          </v-tabs-window-item>
-        </v-tabs-window>
-        </div>
+        <!-- 동적으로 추가되는 탭들의 내용 -->
+        <v-tabs-window-item v-for="tab of mainStore.tabs" :key="tab.id" :value="tab.id"  class="h-100">
+          <component :is="tab.component" />
+        </v-tabs-window-item>
+      </v-tabs-window>
       </div>
     </v-main>
   <!-- </v-app> -->

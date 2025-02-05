@@ -1,16 +1,21 @@
 <script setup>
   import { useLoginStore } from '@/stores/cmn/Login' 
   import { useMainStore } from '@/stores/common/main' 
+  import { useCommonStore } from '@/stores/common/commonStore' 
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
   import * as common from '@/utils/common'
+  import TextField from '@/components/common/TextField.vue'
 
   const mainStore = useMainStore();
   const loginStore = useLoginStore();
+  const commonStore = useCommonStore();
 
   // 로컬 상태
   const id = ref('');
   const password = ref('');
+  const idRef = ref(null);
+  const pwdRef = ref(null);
   const valid = ref(false);
 
   const router = useRouter();
@@ -30,56 +35,47 @@ const doLogin = async (e) => {
 
   if (valid.value) {
     loadingComponent = common.showLoading();
-    console.log("loadingComponent", loadingComponent);
 
     loginStore.setValid(valid.value);
     const success = (request, response) => {
-      console.log("success >>> ", response);
       const data = {
-            'isLogin':true
-            , 'expTime':response.payload.expTime
-            , 'loginId':response.payload.loginId
-            , 'roles':response.payload.roles
-        }
-      sessionStorage.setItem('menuList', JSON.stringify(response.payload.menuList));
+          'isLogin':true
+          , 'expTime':response.payload.expTime
+          , 'loginId':response.payload.loginId
+          , 'roles':response.payload.roles
+      }
+      
       loginStore.isLogin = true;
-      //this.setIsLogin(true);
-      //common.loadContent(document.getElementById('wrapper'), '/', data);
+      mainStore.setMenuList(response.payload.menuList);
+      commonStore.setCommCodeInfo(response.payload.commCodeInfo);
+      commonStore.setLoginId(response.payload.loginId);
+      sessionStorage.setItem('Access-Token', response.payload.accessToken);
     };
+
     const fail = (request, response) => {
-        console.log("fail >>> ", response);
-        //useSnackbar().showSnackbar (common.evl(response.payload.message, '오류가 발생하였습니다. 관리자에게 문의해주세요.'), "red", 2000);
-        common.showSnackbar(common.evl(response.payload.message, '오류가 발생하였습니다. 관리자에게 문의해주세요.'), "red", 2000);
+        common.errorAlert(common.evl(response.payload.cause.message, '오류가 발생하였습니다. 관리자에게 문의해주세요.'));
     };
 
     await loginStore.login(id.value, password.value, success, fail);
     
     common.hideLoading(loadingComponent);
-    console.log("loadingComponent", loadingComponent);
 
     if(loginStore.isLogin) {
-      mainStore.setMenuList(JSON.parse(sessionStorage.getItem('menuList')));
-      console.log(">>>>", mainStore.menuList);
       router.push('/');
     }
   } else {
-    //alert('Please fill out the form correctly.');
-    //await useSnackbar().showSnackbar('dddddddd', "", 3000); // 3초 동안 표시
+
     let field = '';
     let txt  = '';
     if(common.isEmpty(id.value)) {
       txt = '아이디';
-      // id.value?.focus();
+      idRef.value?.focus();
     } else {
       txt = '비밀번호';
-      //password.value?.focus();
+      pwdRef.value?.focus();
     }
-    // common.showLoading();
-    // setTimeout(()=>{
-    //   common.hideLoading();
-    // }, 3000);
 
-  //  common.showSnackbar(`${txt}를 확인해주세요.`, "error", 2000);
+   common.showSnackbar(`${txt}를 확인해주세요.`, "error", 2000);
 
   }
 };
@@ -95,34 +91,46 @@ const doLogin = async (e) => {
       <v-card-text>
         <v-form ref="form" v-model="valid" lazy-validation id="test">
           <!-- 아이디 입력 -->
-          <v-text-field
+          <TextField
             label="ID"
             v-model="id"
             :rules="[common.rulesReq]"
             variant="outlined"
             dense
+            ref="idRef"
             @keydown='doLogin'
-          ></v-text-field>
+          ></TextField>
 
           <!-- 비밀번호 입력 -->
-          <v-text-field
+          <TextField
             label="Password"
             v-model="password"
             :rules="[common.rulesReq]"
             variant="outlined"
             dense
+            ref="pwdRef"
             type="password"
             @keydown='doLogin'
-          ></v-text-field>
+          ></TextField>
 
           <!-- 로그인 버튼 :disabled="!valid"-->
           <v-btn
             block
             color="primary"
             class="mt-4"
+            clearable
             @click="doLogin"
           >
             Login
+          </v-btn>
+          <v-btn
+            block
+            color="primary"
+            class="mt-4"
+            clearable
+            variant="outlined"
+          >
+            Guest
           </v-btn>
         </v-form>
       </v-card-text>

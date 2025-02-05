@@ -5,13 +5,26 @@
 
   const mainStore = useMainStore();
   
-  const menuData = common.isEmpty(sessionStorage.getItem('menuList')) ?
-            []
-            :ref(JSON.parse(sessionStorage.getItem('menuList')));
+  // const menuData = common.isEmpty(mainStore.getMenuList) ?
+  //           ref([])
+  //           :ref(mainStore.getMenuList);
+  const menuData = ref([]);
 
+// console.log("????", menuData);
   const selectedItem = ref([]);
   // 동적 컴포넌트 로딩을 위한 glob 설정
   const modules = import.meta.glob("/src/views/**/*.vue");
+
+  onMounted(async ()=>{
+    if (common.isEmpty(mainStore.menuList)) {
+        console.log("common.getLoginId", common.getLoginId());
+        await common.sendByTrnCd('MNM00001', { 'uid': common.getLoginId() }, (d, r) => {
+          mainStore.menuList = r.payload
+          console.log("MNM00001", r.payload)
+        });
+      }
+    menuData.value = mainStore.menuList;
+  });
 
   const onNodeClick = (activeItems) => {
     
@@ -61,29 +74,27 @@ const findItemById = (items, id) => {
 </script>
 
 <template>
-    <div>
-        <v-navigation-drawer v-model="mainStore.drawer">
-            <v-btn id ="ci" text elevation="0">
-                <v-icon>mdi-view-dashboard</v-icon>
-                <span class="ml-2">Dashboard</span>
-            </v-btn>
-            <v-divider></v-divider>
-            <v-treeview
-                :items="menuData"
-                item-value="menuId"
-                item-title="menuNm"
-                item-children="children"
-                open-on-click
-                hide-expand-icon
-                @click:select="onNodeClick"
-              >
-              <template v-slot:label="{ item }">
-                <!-- 체크박스를 숨기고, 항목 텍스트만 표시 -->
-                <span>{{ item.menuNm }}</span>
-              </template>
-            </v-treeview>
-        </v-navigation-drawer>
-    </div>
+  <v-navigation-drawer v-model="mainStore.drawer" :width="mainStore.drawerWidth" location="start" style="height:100% !important; top:0px !important">
+      <v-btn id ="ci" text elevation="0">
+          <v-icon>mdi-view-dashboard</v-icon>
+          <span class="ml-2">Dashboard</span>
+      </v-btn>
+      <v-divider></v-divider>
+      <v-treeview
+          :items="menuData"
+          item-value="menuId"
+          item-title="menuNm"
+          item-children="children"
+          open-on-click
+          hide-expand-icon
+          @click:select="onNodeClick"
+        >
+        <template v-slot:label="{ item }">
+          <!-- 체크박스를 숨기고, 항목 텍스트만 표시 -->
+          <span>{{ item.menuNm }}</span>
+        </template>
+      </v-treeview>
+  </v-navigation-drawer>
 </template>
 <style scoped>
 

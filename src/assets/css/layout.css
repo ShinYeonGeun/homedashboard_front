@@ -4,7 +4,7 @@
 
 #main-wrap {padding:1rem; background-color: var(--vt-c-text-dark-2);}
 #tab-wrap {/*padding-top:1rem;*//* background-color:#fff ;*/}
-#content-wrap {height:100vh; overflow:auto; background-color: #fff; padding:1rem;}
+#content-wrap {/*height:100vh; */overflow:auto; background-color: #fff; padding:1rem;}
 .data-table-header {display: flex; flex-direction: row; padding:1rem; align-items: center;}
 .data-table-header-count {margin:0 10px;}
 
@@ -32,7 +32,6 @@
 }
 
 .data-table {
-    height:100%;
     overflow:auto;
     width: 100% !important;         /* 전체 너비 고정 */
 }

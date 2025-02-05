@@ -6,23 +6,26 @@
     @update:modelValue="updateSelectedItem"
     :items="formattedItems"
   >
+    
     <!-- 아이템 표시 형식 커스터마이징 -->
     <template v-slot:item="{ props, item }">
-      <v-list-item v-bind="props" :title="formatItem(item)"></v-list-item>
+      <v-list-item v-bind="props" :title="formatItem(item)">
+        
+      </v-list-item>
     </template>
 
     <!-- 선택된 값 커스터마이징 -->
     <!-- <template #selection="{ item }"> -->
-    <template v-slot:selection="{ item, index }">
-      <!-- item.title !== '[object Object] 왜 이걸로 처음에 세팅됨?-->
-      <span v-if="item.title !== '[object Object]'" class="v-select__selection-text">{{formatItem(item)}}</span>
+    <template v-slot:selection="{ item }">
+      <span v-if="localRequired" class="text-error pe-2">*</span>
+      <span v-if="!common.isEmpty(item.props.title)" class="v-select__selection-text">{{formatItem(item)}}</span>
     </template>
   </v-select>
 </template>
 
 <script setup>
 import { ref, computed, defineProps, watch, onMounted, useAttrs } from 'vue';
-import * as common from '@/utils/common'
+import * as common from '@/utils/common';
 
 // props 정의
 const props = defineProps({
@@ -34,58 +37,47 @@ const props = defineProps({
     type: Array,
     required: true, // 필수 prop
   },
+  required: {
+    type: Boolean,
+    default:false
+  },
   modelValue: {
     type: [String, Object], // v-model로 전달되는 값의 타입
   },
-  emptyText:{
+  emptyText: {
     type: String,
   },
-  emptyValue:{
+  emptyValue: {
     type: [String, Object],
   },
   emptyMode: {
     type: String,
-    default: 'append'
-  }
+    default: 'prepend',
+  },
 });
 
 // `useAttrs`를 이용하여 $attrs 접근
 const attrs = useAttrs();
 
-// 선택된 항목
-const selectedItem = ref(props.modelValue);
+// localProps를 개별적으로 복사하여 반응형으로 관리
+const localFormatter = ref(props.formatter);
+const localItems = ref([...props.items]); // 배열은 얕은 복사로 관리
+const localModelValue = ref(props.modelValue);
+const localRequired = ref(props.required);
+const emptyText = ref(props.emptyText);
+const emptyValue = ref(props.emptyValue);
+const emptyMode = ref(props.emptyMode);
 
-// emit 이벤트를 정의하여 부모에게 값 전달
+// 선택된 항목
+const selectedItem = ref(localModelValue.value);
+
+// emit 이벤트 정의
 const emit = defineEmits(['update:modelValue']);
 
 // `formatter`를 기반으로 항목을 처리
 const formattedItems = computed(() => {
-  // const title = item[attrs['item-title']];
-  // const value = item[attrs['item-value']];
-  let emptyItem = {};
-  let addEmptyItem = false;
-  let items = null;
-
-  if(props.emptyText) {
-    addEmptyItem = true;
-    emptyItem[attrs['item-title']] = props.emptyText;
-    emptyItem[attrs['item-value']] = props.emptyValue;
-  }
-
-  if(addEmptyItem) {
-    if(props.emptyMode === 'append') {
-      items = [... props.items, emptyItem];
-    } else {
-      items = [emptyItem, ... props.items];
-    }
-  } else {
-    items = props.items;
-  }
-console.log("items111",items, addEmptyItem);
-  //return props.items.map((item) => {
-  return items.map((item) => {
+  return localItems.value.map((item) => {
     const formattedTitle = formatItem(item);
-    console.log("items", item, formattedTitle);
     return {
       ...item,
       formattedTitle, // 포맷팅된 제목 추가
@@ -93,11 +85,15 @@ console.log("items111",items, addEmptyItem);
   });
 });
 
-// formatter에 따라 항목을 포맷팅하는 함수
+// `formatter`에 따라 항목을 포맷팅하는 함수
 const formatItem = (item) => {
   const { title, value } = item;
-  console.log("items2", item);
-  switch (props.formatter) {
+
+  if (common.isEmpty(title)) {
+    return '';
+  }
+
+  switch (localFormatter.value) {
     case 'v':
       return value;
     case 't:v':
@@ -108,20 +104,53 @@ const formatItem = (item) => {
       return `${title}-${value}`;
     case 'v-t':
       return `${value}-${title}`;
-    default: 
+    default:
       return title; // 기본적으로 title만 표시
   }
 };
 
 // modelValue 변경 시 선택된 항목 업데이트
-watch(() => props.modelValue, (value) => {
-  selectedItem.value = value;
+watch(() => props.modelValue, (newValue) => {
+  localModelValue.value = newValue;
+  selectedItem.value = newValue;
 });
+
+// items가 변경될 때 localItems를 업데이트
+watch(() => props.items, (newItems) => {
+  console.log("props.items", props.items);
+  localItems.value = [...newItems]; // 배열을 새로 복사하여 반영
+}
+,{ deep: true } // 깊은 감시
+);
 
 // 선택된 항목 업데이트
 const updateSelectedItem = (value) => {
   selectedItem.value = value;
-  emit('update:modelValue', value);  // 부모에게 값 전달
+  emit('update:modelValue', value); // 부모에게 값 전달
 };
+
+onMounted(() => {
+  let emptyItem = {};
+  let addEmptyItem = false;
+
+  // emptyText가 있을 경우 빈 항목 추가
+  if (emptyText.value) {
+    addEmptyItem = true;
+    emptyItem[attrs['item-title']] = emptyText.value;
+    emptyItem[attrs['item-value']] = emptyValue.value;
+  }
+
+  if (addEmptyItem) {
+    if (emptyMode.value === 'append') {
+      localItems.value.push(emptyItem);
+    } else {
+      localItems.value.unshift(emptyItem);
+    }
+
+    if(common.isEmpty(selectedItem.value)) {
+      selectedItem.value = emptyValue.value;
+    }
+  }
+});
 
 </script>

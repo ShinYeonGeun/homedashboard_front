@@ -2,16 +2,17 @@
   <div class="loading-overlay">
     <v-progress-circular
       indeterminate
-      :color="color"
+      :color="localColor"
       :size="50"
       :width="4"
-      :style="{ animationDuration: speed + 's' }"
+      :style="{ animationDuration: localSpeed + 's' }"
     />
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { ref, computed, watch, onMounted } from "vue";
+const props = defineProps({
   color: {
     type: String,
     default: "primary",
@@ -21,6 +22,10 @@ defineProps({
     default: 0.8, // 애니메이션 속도 조정 (초 단위)
   },
 });
+
+const localColor = ref(props.color);
+const localSpeed = ref(props.speed);
+
 </script>
 
 <style scoped>
