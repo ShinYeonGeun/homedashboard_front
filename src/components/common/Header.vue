@@ -51,6 +51,7 @@
               loginInfo.value[key] = common.getDateString(data[key] * 1000, 'YYYY-MM-DD HH:MM:SS');
               break;
             default:
+              console.log("k", key, data[key]);
               loginInfo.value[key] = data[key];
               break;
           }
@@ -139,11 +140,9 @@
       <v-app-bar-nav-icon @click="mainStore.drawer = !mainStore.drawer"></v-app-bar-nav-icon>
       <v-app-bar-title></v-app-bar-title>
       <v-spacer></v-spacer>
-        <!-- <v-btn>
-          {{loginInfo.sub}}
-        </v-btn> -->
         <span class="me-4">
-          {{loginInfo.sub}}
+          <v-icon icon="mdi-account-circle"></v-icon>
+          {{loginInfo.name}} 님
         </span>
         <span>
           <!-- <span class="mdi mdi-alarm"></span>
@@ -155,22 +154,32 @@
             {{remainTime}} 연장
           </v-btn>
         </span>
-        <v-btn variant="tonal" color="dark" size="small" @click="logout">
+        <v-btn variant="tonal" color="dark" size="small" class="me-2" @click="logout">
           로그아웃
         </v-btn>
         <v-btn icon>
           <v-icon>mdi-dots-vertical</v-icon>
           <v-menu activator="parent">
-            <v-list class="bg-black opacity-70">
-              <v-list-item max-width="300">
+            <v-list class="bg-black opacity-70 w350">
+              <v-list-item>
                 <v-list-item-title class="text-wrap text-body-2">
                   <v-row align="center">
-                    <v-col cols="5">역할</v-col>
+                    <v-col cols="5" class="text-right">아이디</v-col>
+                    <v-divider vertical></v-divider>
+                    <v-col>{{loginInfo.sub}}</v-col>
+                  </v-row>
+                  <v-row align="center">
+                    <v-col cols="5" class="text-right">이름</v-col>
+                    <v-divider vertical></v-divider>
+                    <v-col>{{loginInfo.name}}</v-col>
+                  </v-row>
+                  <v-row align="center">
+                    <v-col cols="5" class="text-right">역할</v-col>
                     <v-divider vertical></v-divider>
                     <v-col>{{loginInfo.roles}}</v-col>
                   </v-row>
                   <v-row align="center">
-                    <v-col cols="5">로그인일시</v-col>
+                    <v-col cols="5" class="text-right">로그인일시</v-col>
                     <v-divider vertical></v-divider>
                     <v-col>{{loginInfo.loginDtm}}</v-col>
                   </v-row>

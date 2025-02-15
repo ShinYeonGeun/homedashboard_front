@@ -103,6 +103,9 @@
             <template v-slot:[`item._row`]="{ item, index }">
               <span>{{index + 1}}</span>
             </template>
+            <template v-slot:[`item.tmotMs`]="{ item }">
+              <span>{{common.numberFormat(item.tmotMs)}}</span>
+            </template>
             <template v-slot:[`item.lastLoginDtm`]="{ item }">
               <span>{{ common.getDateString(item.lastLoginDtm, 'YYYY-MM-DD HH:MM:SS', "-") }}</span>
               <v-icon v-if="!common.isEmpty(item.lastLoginDtm)" icon="mdi-calendar-clock-outline" />
@@ -117,31 +120,31 @@
       <v-divider vertical></v-divider>
       <!-- 오른쪽 탭 영역 -->
         <div class="fx1 overflow-auto d-flex flex-column">
+          <!--
         <v-tabs v-model="tab" grow>
-          <v-tab :value="0">회원정보</v-tab>
-          <v-tab :value="1">역할정보</v-tab>
-          <v-tab :value="2">연락처정보</v-tab>
+          <v-tab :value="0">거래코드정보</v-tab>
+          <v-tab :value="1">거래별권한정보</v-tab>
         </v-tabs>
         <v-tabs-window v-model="tab" class="h-100">
-          <v-tabs-window-item :value="0" class="h-100 pt-4">
+          <v-tabs-window-item :value="0" class="h-100 pt-4"> -->
             <v-card flat>
               <v-card-title>
-                회원상세정보
+                거래코드상세정보
               </v-card-title>
               <v-card-actions class="d-flex justify-end">
                 <v-btn color="primary" 
                        variant="outlined" 
                        append-icon="mdi-content-save" 
                        size="small" 
-                       :disabled="common.isEmpty(selectedTrnCdItemRow) ? !isDupCheck : false"
+                       :disabled="!isDupCheck"
                        @click="save">
                       저장
                 </v-btn>
-                <v-btn color="primary" variant="outlined" append-icon="mdi-delete" size="small">
+                <v-btn color="primary" variant="outlined" append-icon="mdi-delete" size="small" @click="deleteTrnCd">
                       삭제
                 </v-btn>
-                <v-btn color="primary" variant="outlined" append-icon="mdi-lock-reset" size="small">
-                      비밀번호 초기화
+                <v-btn color="primary" variant="outlined" size="small" @click="setInitValue">
+                      기본값 설정
                 </v-btn>
                 <v-btn :color="common.colorList.REFRESH_BUTTON" variant="outlined" append-icon="mdi-refresh" size="small" @click="trnCdInfoInit">
                       초기화
@@ -244,37 +247,9 @@
                       variant="outlined"
                       density="compact"
                       hide-details
-                      emptyText=" "
-                      emptyValue=""
-                      emptyMode="prepend"
                       required
+                      :readonly="delYnLock"
                     />
-                  </v-col>
-                </v-row>
-                <v-row>
-                  <v-col>
-                    <TextField
-                      label="최종로그인일시"
-                      v-model="trnCdItem.lastLoginDtm"
-                      dataType="datetime"
-                      variant="outlined"
-                      dense
-                      density="compact"
-                      append-inner-icon="mdi-calendar-clock-outline"
-                      readonly
-                      hide-details
-                    ></TextField>
-                  </v-col>
-                  <v-col>
-                    <TextField
-                      label="최종거래UUID"
-                      v-model="trnCdItem.lastTrnUUID"
-                      variant="outlined"
-                      dense
-                      density="compact"
-                      readonly
-                      hide-details
-                    ></TextField>
                   </v-col>
                 </v-row>
                 <v-row>
@@ -293,8 +268,32 @@
                   </v-col>
                   <v-col>
                     <TextField
+                      label="최종거래코드"
+                      v-model="trnCdItem.lastTrnCd"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      readonly
+                      hide-details
+                    ></TextField>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <TextField
                       label="최종거래사용자"
                       v-model="trnCdItem.lastTrnUid"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      readonly
+                      hide-details
+                    ></TextField>
+                  </v-col>
+                  <v-col>
+                    <TextField
+                      label="최종거래UUID"
+                      v-model="trnCdItem.lastTrnUUID"
                       variant="outlined"
                       dense
                       density="compact"
@@ -330,18 +329,13 @@
                 </li>
               </ul>
             </v-alert>
-          </v-tabs-window-item>
+          <!-- </v-tabs-window-item>
           <v-tabs-window-item :value="1">
             <v-card flat>
               <v-card-text>탭 2 내용</v-card-text>
             </v-card>
           </v-tabs-window-item>
-          <v-tabs-window-item :value="2">
-            <v-card flat>
-              <v-card-text>탭 3 내용</v-card-text>
-            </v-card>
-          </v-tabs-window-item>
-        </v-tabs-window>
+        </v-tabs-window> -->
       </div>
     </v-row>
   </div>
@@ -364,8 +358,9 @@ const trnCdListTable = ref(null); //회원목록 <table> ref
 const trnCdItem = ref({}); //그리드에서 클릭된 Row의 데이터
 const selectedTrnCdItemRow = ref({});
 const trnCdLock = ref(false);
+const delYnLock = ref(true);
 const isDupCheck = ref(false);
-const dupCheckUid = ref(''); //중복검사 통과한 ID
+const dupCheckTrnCd = ref(''); //중복검사 통과한 ID
 const tab = ref(0);
 const trnCdList = ref([]);
 const gridLoading = ref(false);
@@ -383,15 +378,16 @@ const pageInfo = ref({
 
 const headers = [
   {key:"_row", title:"No",width:60, sortable: false},
-  { key: "trnCd", title: "거래코드", width:200, headerProps:{'class':'text-center'}},
-  { key: "trnNm", title: "거래명", align:' d-none', width:80},
+  { key: "trnCd", title: "거래코드", width:120, align:'center', headerProps:{'class':'text-center'}},
+  { key: "trnNm", title: "거래명", width:160, headerProps:{'class':'text-center'}},
   { key: "svcNm", title: "서비스명", width:160, headerProps:{'class':'text-center'}},
-  { key: "mtdNm", title: "메소드명", align:'center', width:200, headerProps:{'class':'text-center'} },
+  { key: "mtdNm", title: "메소드명", width:200, headerProps:{'class':'text-center'} },
   { key: "tmotMs", title: "타임아웃(ms)", align:'center', width:200, headerProps:{'class':'text-center'} },
   { key: "delYn", title: "삭제", width:90, align:'center', headerProps:{'class':'text-center'} },
-  { key: "lastTrnUUID", title: "최종거래UUID", align:' d-none', width:80 },
   { key: "lastTrnDtm", title: "최종거래일시", align:'center', width:180, headerProps:{'class':'text-center'} },
+  { key: "lastTrnCd", title: "최종거래코드", width:100, headerProps:{'class':'text-center'} },
   { key: "lastTrnUid", title: "최종거래이용자ID", width:200, headerProps:{'class':'text-center'} },
+  { key: "lastTrnUUID", title: "최종거래UUID", align:' d-none', width:80 },
 ];
 
 const loadMore = async (e) => {
@@ -415,7 +411,7 @@ const onSearch = async (pageNo) => {
       , 'mtdNm' : schMtdNm.value
       , 'delYn': schDelYn.value.codeVal
   };
-
+console.log("@@@@@@", params);
   if(common.isEmpty(pageNo) || pageNo === 0) {
     pageInfo.value.pageNo = 0;
     pageInfo.value.totalCnt = 0;
@@ -436,7 +432,7 @@ const onSearch = async (pageNo) => {
   
   gridLoading.value = true;
 
-  await common.sendByTrnCd('TRN10001', params, (d,r)=> {
+  await common.sendByTrnCd('TRN00R02', params, (d,r)=> {
       if(!r.payload.trnCdList.empty){
         pageInfo.value.totalCnt = r.payload.totalElements;
         pageInfo.value.totalPages = r.payload.totalPages;
@@ -472,30 +468,31 @@ const onRowClick = (event, row) => {
   if(isChanged) {
     selectedTrnCdItemRow.value.element = target.parentElement;
     selectedTrnCdItemRow.value.id = row.item.trnCd;
-    selectedTrnCdItemRow.value.item = row.item;
+    selectedTrnCdItemRow.value.item = { ... row.item};
     common.addClass(selectedTrnCdItemRow.value.element, [className]);
+    delYnLock.value = row.item.delYn !== 'Y';
   }else{
     selectedTrnCdItemRow.value = {};
-    trnCdItem.value = {}; //선택된 데이터 초기화
+    trnCdItemInit(); //선택된 데이터 초기화
   }
 };
 
 const dupCheck = async () => {
-  const params = {'uid':trnCdItem.value.trnCd}
+  const params = {'trnCd':trnCdItem.value.trnCd}
 
-  if(!uidRegexCheck()) {
-    common.errorAlert("이용자ID를 확인해주세요.")
+  if(common.isEmpty(trnCdItem.value.trnCd)) {
+    common.errorAlert("거래코드를 확인해주세요.")
     isDupCheck.value = false;
     return false;
   }
 
-  await common.sendByTrnCd('USR00003', params, (req,res)=> {
+  await common.sendByTrnCd('TRN00R03', params, (req,res)=> {
       if(res.payload.count === 0) {
-        common.infoAlert('사용가능한 ID입니다.');
+        common.infoAlert('사용 가능한 거래코드입니다.');
         isDupCheck.value = true;
-        dupCheckUid.value = req.uid;
+        dupCheckTrnCd.value = req.trnCd;
       } else {
-        common.errorAlert('사용할 수 없는 ID입니다.');
+        common.errorAlert('사용할 수 없는 거래코드입니다.');
         isDupCheck.value = false;
       }
   }, (req, res)=>{
@@ -504,52 +501,25 @@ const dupCheck = async () => {
 };
 
 const init = () => {
-  // let contentHeight = 0;
-  // common.commonAdjustHeight();
-//   common.adjustHeight({ target: "#trnCdListTableWrapper"
-//                       , base: ".app-container"
-//                       , excludes: [".search-area"] 
-//                       , reduce:100
-//                       });
+  schTrnCd.value = '';
+  schTrnNm.value = '';
+  schSvcNm.value = '';
+  schMtdNm.value = '';
+  schDelYn.value = ''; //검색조건 삭제여부 
+  trnCdList.value = [];
+  trnCdItemList.value = [];
+  tab.value = 0;
+  gridLoading.value = false
+  pageInfo.value.pageNo = 0;
+  pageInfo.value.pageSize = 20;
+  pageInfo.value.totalCnt = 0;
+  pageInfo.value.totalPages = 0;
+  pageInfo.value.count = 0;
+  pageInfo.value.first = true;
+  pageInfo.value.last = false;
 
-//   contentHeight = common.adjustHeight({ 
-//                         target: "#trnCdListTable"
-//                       , base: "#trnCdListTableWrapper"
-//                       , excludes: ["#trnCdListHeader"] 
-//                       , reduce:50
-//                       });
-// console.log("h", contentHeight);
-//   document.querySelector("#trnCdTabContentWrapper").style.height = `${contentHeight}px`;
-
-
-  // contentHeight = common.adjustHeight({ 
-  //                       target: "#userListTable"
-  //                     , base: "#userListTableWrapper"
-  //                     , excludes: ["#userListHeader"] 
-  //                     , reduce:50
-  //                     });
-
-  // document.querySelector("#tabContentWrapper").style.height = `${contentHeight}px`;
-
-  // schTrnCd.value = '';
-  // schTrnNm.value = '';
-  // schSvcNm.value = '';
-  // schMtdNm.value = '';
-  // schDelYn.value = ''; //검색조건 삭제여부 
-  // trnCdList.value = [];
-  // trnCdItemList.value = [];
-  // tab.value = 0;
-  // gridLoading.value = false
-  // pageInfo.value.pageNo = 0;
-  // pageInfo.value.pageSize = 20;
-  // pageInfo.value.totalCnt = 0;
-  // pageInfo.value.totalPages = 0;
-  // pageInfo.value.count = 0;
-  // pageInfo.value.first = true;
-  // pageInfo.value.last = false;
-
-  // trnCdInfoInit();
-  // errorStateInit();
+  trnCdInfoInit();
+  errorStateInit();
 };
 
 const errorStateInit = () => {
@@ -558,72 +528,98 @@ const errorStateInit = () => {
                       trnNm:null,
                       svcNm:null,
                       mtdNm:null,
+                      tmotMs:null,
                       delYn:null,
                     };
 }
 
 const trnCdInfoInit = () => {
   trnCdLock.value = false;
-  trnCdItem.value = {};
+  trnCdItemInit();
   //회원목록 선택행 css 조정
   if(!common.isEmpty(selectedTrnCdItemRow.value.element)){
     common.removeClass(selectedTrnCdItemRow.value.element, [`bg-${common.colorList.GRID_SELECTED_ROW}`]);
   }
   selectedTrnCdItemRow.value = {}; //선택행 초기화
   isDupCheck.value = false;
-  dupCheckUid.value = '';
+  dupCheckTrnCd.value = '';
 
   errorStateInit();
 };
 
-const userInfoErrStateChg = () => {
+const trnCdInfoErrStateChg = () => {
   errorState.value.trnCd = common.isEmpty(trnCdItem.value.trnCd) ? null:common.isEmpty(trnCdItem.value.trnCd);
   errorState.value.trnNm = common.isEmpty(trnCdItem.value.trnNm) ? null:common.isEmpty(trnCdItem.value.trnNm);
   errorState.value.svcNm = common.isEmpty(trnCdItem.value.svcNm) ? null:common.isEmpty(trnCdItem.value.svcNm);
   errorState.value.mtdNm = common.isEmpty(trnCdItem.value.mtdNm) ? null:common.isEmpty(trnCdItem.value.mtdNm);
+  errorState.value.tmotMs = common.isEmpty(trnCdItem.value.tmotMs) ? null:common.isEmpty(trnCdItem.value.tmotMs);
   errorState.value.delYn = common.isEmpty(trnCdItem.value.delYn) ? null:common.isEmpty(trnCdItem.value.delYn);
 };
 
 const save = async () => {
   let msg = "수정";
-  let tranCd = "USR00005";
+  let trnCd = "TRN00U01";
   //선택된 아이템이 없으면 등록으로 간주.
-  if(common.isEmpty(selectedTrnCdItemRow.value)) {
+  if(common.isEmpty(selectedTrnCdItemRow.value) || 
+     (!common.isEmpty(selectedTrnCdItemRow.value) && trnCdItem.value.delYn === 'Y')) {
     msg = "등록";
-    tranCd = "USR00004";
-    if(!isDupCheck.value) {
+    trnCd = "TRN00I01";
+    if(!isDupCheck.value && common.isEmpty(selectedTrnCdItemRow.value)) {
       common.errorAlert("중복검사 후 등록이 가능합니다.");
       return false;
     }
-    
-    userInfoErrStateChg();
-
-    common.confirm(`${msg}하시겠습니까?`, async () =>{
-      await common.sendByTrnCd(tranCd, trnCdItem.value, (req,res)=> {
-          common.infoAlert(`${msg}되었습니다.`, trnCdInfoInit());
-      }, (req, res)=>{
-          common.errorAlert(res.payload);
-      });
-    });
   }
+
+  trnCdInfoErrStateChg();
+
+  common.confirm(`${msg}하시겠습니까?`, async () =>{
+    await common.sendByTrnCd(trnCd, trnCdItem.value, (req,res)=> {
+        common.infoAlert(`${msg}되었습니다.`, trnCdInfoInit());
+    }, (req, res)=>{
+        common.errorAlert(res.payload);
+    });
+  });
+};
+
+const deleteTrnCd = () => {
+  if(common.isEmpty(trnCdItem.value)) {
+    common.errorAlert("삭제할 거래코드를 선택해주세요.");
+    return false;
+  }
+
+  common.confirm(`삭제하시겠습니까?`, async () =>{
+    await common.sendByTrnCd('TRN00D01', {'trnCd':trnCdItem.value.trnCd}, (req,res)=> {
+        common.infoAlert(`삭제되었습니다.`, trnCdInfoInit());
+    }, (req, res)=>{
+        common.errorAlert(res.payload);
+    });
+  });
+}
+
+const setInitValue = () => {
+  trnCdItem.value.tmotMs = 30000;
+  trnCdItem.value.delYn = "N";
+  delYnLock.value = true;
 };
 
 onMounted(() => {
   init();
 });
 
-const needDupCheck = () => dupCheckUid.value !== trnCdItem.value.uid;
+const needDupCheck = () => dupCheckTrnCd.value !== trnCdItem.value.trnCd;
 
 watch( trnCdItem, (newItem, oldItem) => {
 
   if(!common.isEmpty(newItem)) {
-    userInfoErrStateChg();
+    trnCdInfoErrStateChg();
   }
+
+  isDupCheck.value = !needDupCheck();
   
   if(common.isEmpty(selectedTrnCdItemRow.value)) {
     //등록
     // uidRegexCheck();
-    // isDupCheck.value = !needDupCheck();
+    
   } else {
 
     //수정일 때 변경분 표시
@@ -639,6 +635,9 @@ watch( trnCdItem, (newItem, oldItem) => {
           //변경분 표시
           errorState.value[k] = selectedTrnCdItemRow.value.item[k] !== trnCdItem.value[k];
           break;
+        case 'tmotMs':
+          errorState.value[k] = selectedTrnCdItemRow.value.item[k] != common.cleanNumber(trnCdItem.value[k]);
+          break;
         default:break;
       }
     }
@@ -647,37 +646,10 @@ watch( trnCdItem, (newItem, oldItem) => {
 ,{ deep: true } // 깊은 감시
 );
 
-const uidRegexCheck = () => {
-  const regexLetter = /[a-zA-Z]/;
-  const regexNumber = /\d/;
-  const regexSpecialChar = /[!@#$%^&*_\-]/;
-  const regexLength = /^.{5,30}$/;
-  const regextOnlyEng = /^[a-zA-Z]*$/; 
-
-  // (.) → 임의의 한 문자(괄호로 감싸서 캡처)
-  // \1 → 첫 번째 캡처한 문자를 참조(백리퍼런스)
-  // {2,} → 위의 문자가 3번 이상 반복됨(즉, 총 4회 이상 연속)
-  const regexRepeat = /(.)\1{3,}/;
-
-  if(common.evl(trnCdItem.value.trnCd, '') === "") {
-    return false;
-  }else{
-    //동일 문자 4회 이상 불가, 영문으로만 구성
-    //영문 + 숫자(or 특수문자) 또는 숫자 + 특수문자로 구성
-    //글자수 5이상 30이하 체크
-    if(( (regextOnlyEng.test(trnCdItem.value.uid)) ||
-        (regexLetter.test(trnCdItem.value.uid) && regexNumber.test(trnCdItem.value.uid)) ||
-        (regexLetter.test(trnCdItem.value.uid) && regexSpecialChar.test(trnCdItem.value.uid)) ||
-        (regexNumber.test(trnCdItem.value.uid) && regexSpecialChar.test(trnCdItem.value.uid))) &&
-        regexLength.test(trnCdItem.value.uid) &&
-        !regexRepeat.test(trnCdItem.value.uid)
-      ) {
-      
-      return true;
-    }else{
-      return false;
-    }
-  }
+const trnCdItemInit = () => {
+  trnCdItem.value = {};
+  trnCdItem.value.delYn = "N";
+  delYnLock.value = true;
 };
 
 </script>

@@ -78,7 +78,6 @@ const formattedValue = computed(() => {
 // 입력 이벤트 처리
 const updateValue = (inputValue) => {
   rawValue.value = inputValue;  // 원본 값 그대로 저장
-  console.log("@@WW@@", rawValue.value, inputValue);
   emit("update:modelValue", inputValue);  // 부모에 원본 값 전달
 };
 
@@ -86,7 +85,6 @@ const updateValue = (inputValue) => {
 watch(() => props.modelValue, (newValue) => {
 
 // watch( props.modelValue.value, (newValue, oldValue) => {  
-  console.log("@@WW", rawValue.value, newValue);
   const type = common.evl(localDataType.value, "").toUpperCase();
 
   if (newValue !== rawValue.value) {

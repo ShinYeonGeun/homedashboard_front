@@ -4,13 +4,10 @@
   import * as common from '@/utils/common'
 
   const mainStore = useMainStore();
-  
-  // const menuData = common.isEmpty(mainStore.getMenuList) ?
-  //           ref([])
-  //           :ref(mainStore.getMenuList);
+
   const menuData = ref([]);
 
-// console.log("????", menuData);
+
   const selectedItem = ref([]);
   // 동적 컴포넌트 로딩을 위한 glob 설정
   const modules = import.meta.glob("/src/views/**/*.vue");
@@ -18,9 +15,11 @@
   onMounted(async ()=>{
     if (common.isEmpty(mainStore.menuList)) {
         console.log("common.getLoginId", common.getLoginId());
-        await common.sendByTrnCd('MNM00001', { 'uid': common.getLoginId() }, (d, r) => {
+        await common.sendByTrnCd('MNM01R01', { 'uid': common.getLoginId() }, (d, r) => {
           mainStore.menuList = r.payload
-          console.log("MNM00001", r.payload)
+          console.log("MNM01R01", r.payload)
+        }, (req, res) => {
+          common.errorAlert("@@@@@@@@@@@@@@@@@@@");
         });
       }
     menuData.value = mainStore.menuList;

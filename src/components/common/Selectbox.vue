@@ -117,7 +117,6 @@ watch(() => props.modelValue, (newValue) => {
 
 // items가 변경될 때 localItems를 업데이트
 watch(() => props.items, (newItems) => {
-  console.log("props.items", props.items);
   localItems.value = [...newItems]; // 배열을 새로 복사하여 반영
 }
 ,{ deep: true } // 깊은 감시

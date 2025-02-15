@@ -15,7 +15,7 @@ export const useMainStore = defineStore('main', {
     getMenuList: async (data) => {
       if (common.isEmpty(data.menuList)) {
         console.log("common.getLoginId", common.getLoginId());
-        await common.sendByTrnCd('MNM00001', { 'uid': common.getLoginId() }, (d, r) => {
+        await common.sendByTrnCd('MNM01R01', { 'uid': common.getLoginId() }, (d, r) => {
           data.menuList = r.payload
         });
       }
