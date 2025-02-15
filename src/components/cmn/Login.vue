@@ -31,12 +31,14 @@ const doLogin = async (e) => {
   if(common.ignoreEquals(common.evl(e.type, ''), 'keydown') && !common.ignoreEquals(e.key, "enter")) {
     return false;
   }
+
   let loadingComponent = null;
 
   if (valid.value) {
     loadingComponent = common.showLoading();
 
     loginStore.setValid(valid.value);
+
     const success = (request, response) => {
       const data = {
           'isLogin':true
@@ -53,7 +55,7 @@ const doLogin = async (e) => {
     };
 
     const fail = (request, response) => {
-        common.errorAlert(common.evl(response.payload.cause.message, '오류가 발생하였습니다. 관리자에게 문의해주세요.'));
+        common.errorAlert(common.evl(response.payload, '오류가 발생하였습니다. 관리자에게 문의해주세요.'));
     };
 
     await loginStore.login(id.value, password.value, success, fail);

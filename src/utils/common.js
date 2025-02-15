@@ -4,6 +4,7 @@ import { useLoading } from '@/utils/useLoading';
 import { useModal } from '@/utils/useModal';
 import { defineAsyncComponent, markRaw } from 'vue'
 import { useCommonStore } from '@/stores/common/commonStore'
+import CryptoJS from 'crypto-js';
 
 export const rulesReq = (value) => !!value || '필수 입력항목입니다.';
 
@@ -52,8 +53,14 @@ export const send = async (uri, option, data, sccessFunc, errorFunc) => {
 			console.error("res", res, response);
 
 			if (res.status) {
-				if (res.status == 401) {
-					window.location.href = '/cmn/Login';
+				if (res.status >= 400 && res.status < 600) {
+					if (res.status == 401) {
+						window.location.href = '/cmn/Login';
+					} else {
+						if (errorFunc) {
+							errorFunc(data, res);
+						}
+					}
 				}
 			}
 		}
@@ -338,7 +345,7 @@ export const confirm = async (msg, yes, no, close) => {
 			},
 			{
 				label: "취소",
-				props: { color: "error", variant: "outlined", size: "small" },
+				props: { color: "", variant: "outlined", size: "small" },
 				onClick: no,
 				close: true,
 			},
@@ -399,7 +406,7 @@ export const searchComCodeList = async ({
 	codeDetailDelYn = ''
 }) => {
 	let codes = {};
-	await sendByTrnCd('CCD00101', { codeList: ['USER_STATE'] }, (d, r) => {
+	await sendByTrnCd('CCD03R01', { codeList: ['USER_STATE'] }, (d, r) => {
 		if (r.resultCd === 'S') {
 			Object.assign(codes, r.payload);
 		} else {
@@ -450,4 +457,22 @@ export const cleanNumber = (input) => {
 export const numberFormat = (num) => {
 	num = cleanNumber(num);
 	return num.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
+};
+
+// 🔹 AES-256 CBC 암호화
+export const encryptAES = (text) => {
+	return CryptoJS.AES.encrypt(text, CryptoJS.enc.Utf8.parse(import.meta.env.VITE_AES_SECRET_KEY.padEnd(32, "=")), {
+		iv: CryptoJS.enc.Utf8.parse(import.meta.env.VITE_AES_IV.padEnd(16, "=")),
+		mode: CryptoJS.mode.CBC,
+		padding: CryptoJS.pad.Pkcs7,
+	}).toString();
+};
+
+// 🔹 AES-256 CBC 복호화
+export const decryptAES = (cipherText) => {
+	return CryptoJS.AES.decrypt(cipherText, CryptoJS.enc.Utf8.parse(import.meta.env.VITE_AES_SECRET_KEY.padEnd(32, "=")), {
+		iv: CryptoJS.enc.Utf8.parse(import.meta.env.VITE_AES_IV.padEnd(16, "=")), // 암호화할 때와 다른 IV 사용
+		mode: CryptoJS.mode.CBC,
+		padding: CryptoJS.pad.Pkcs7,
+	}).toString(CryptoJS.enc.Utf8);
 };

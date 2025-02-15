@@ -24,7 +24,7 @@ export const useLoginStore = defineStore('Login', {
     async login(id, password, success, fail) {
       const data = {
         "loginId": id
-        , "pswd": password
+        , "pswd": common.encryptAES(password)
       }
       await common.sendByURI('/login', data, success, fail);
     }

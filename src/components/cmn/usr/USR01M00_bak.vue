@@ -125,225 +125,246 @@
       <v-divider vertical></v-divider>
       <!-- 오른쪽 탭 영역 -->
       <div class="fx1 overflow-auto d-flex flex-column">
-          <v-container class="overflow-auto" height="700">
-          <v-card flat>
-            <v-card-title>
-              회원상세정보
-            </v-card-title>
-            <v-card-actions class="d-flex justify-end">
-              <v-btn color="primary" 
-                      variant="outlined" 
-                      append-icon="mdi-content-save" 
-                      size="small" 
-                      :disabled="!isDupCheck"
-                      @click="save">
-                    저장
-              </v-btn>
-              <v-btn color="error" variant="outlined" append-icon="mdi-delete" size="small" @click="deleteUser">
-                    삭제
-              </v-btn>
-              <v-btn variant="outlined" size="small" @click="setInitValue">
-                    기본값 설정
-              </v-btn>
-              <v-btn variant="outlined" size="small">
-                    비밀번호 초기화
-              </v-btn>
-              <v-btn :color="common.colorList.REFRESH_BUTTON" variant="outlined" append-icon="mdi-refresh" size="small" @click="userInfoInit">
-                    초기화
-              </v-btn>
-            </v-card-actions>
-            <v-card-text>
-              <v-row>
-                <v-col>
-                  <!-- 아이디 입력 -->
-                  <TextField
-                    label="이용자 ID"
-                    v-model="userItem.uid"
-                    :error="errorState.uid"
-                    variant="outlined"
-                    dense
-                    density="compact"
-                    clearable
-                    hide-details
-                    :readonly="userIdLock"
-                    required
-                  >
-                      <template v-slot:append>
-                          <v-btn color="primary" 
-                                  variant="outlined" 
-                                  append-icon="mdi-magnify" 
-                                  :disabled="isDupCheck"
-                                  @click="dupCheck" :readonly="userIdLock">
-                              중복검사
-                        </v-btn>
-                      </template>
-                  </TextField>
-                  <p class="text-grey-darken-1 mt-2">
-                    &#42; 아이디는 영문 또는 영어, 숫자, 특수문자 중 2가지 조합으로 구성, 특수문자는 !,@,#,$,%,^,&amp;,*,-_. 만 허용되며 동일문자 4회 이상 불가능합니다.
-                  </p>
-                  <p class="text-error mt-2">
-                    {{uidValidMsg}}
-                  </p>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <TextField
-                    label="이름"
-                    v-model="userItem.name"
-                    :error="errorState.name"
-                    variant="outlined"
-                    dense
-                    density="compact"
-                    clearable
-                    hide-details
-                  />
-                </v-col>
-                <v-col>
-                  <TextField
-                    label="비밀번호 오류횟수"
-                    v-model="userItem.pswdErrCnt"
-                    variant="outlined"
-                    dataType="formatNumber"
-                    dense
-                    density="compact"
-                    clearable
-                    hide-details
-                    suffix="(회)"
-                    class="text-right"
-                    readonly
-                  />
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <Selectbox
-                    :items="userStateItems"
-                    item-title = "codeValCtnt"
-                    item-value = "codeVal"
-                    v-model="userItem.userState"
-                    :error="errorState.userState"
-                    label="이용자상태"
-                    variant="outlined"
-                    density="compact"
-                    formatter="v:t"
-                    hide-details
-                    emptyText=" "
-                    emptyValue=""
-                    emptyMode="prepend"
-                    required
+        <!-- <v-tabs v-model="tab">
+          <v-tab :value="0">회원정보</v-tab>
+          <v-tab :value="1">역할정보</v-tab>
+          <v-tab :value="2">연락처정보</v-tab>
+        </v-tabs> -->
+        <!-- usr01M00TabContentWrapper -->
+        <!-- <v-tabs-window v-model="tab" id="" class="h-100">
+          <v-tabs-window-item :value="0" class="h-100 pt-4"> -->
+            <v-container class="overflow-auto" height="700">
+            <v-card flat>
+              <v-card-title>
+                회원상세정보
+              </v-card-title>
+              <v-card-actions class="d-flex justify-end">
+                <!-- :disabled="common.isEmpty(selectedUserItemRow) ? !isDupCheck : false" -->
+                <v-btn color="primary" 
+                       variant="outlined" 
+                       append-icon="mdi-content-save" 
+                       size="small" 
+                       :disabled="!isDupCheck"
+                       @click="save">
+                      저장
+                </v-btn>
+                <v-btn color="primary" variant="outlined" append-icon="mdi-delete" size="small" @click="deleteUser">
+                      삭제
+                </v-btn>
+                <v-btn color="primary" variant="outlined" size="small" @click="setInitValue">
+                      기본값 설정
+                </v-btn>
+                <v-btn color="primary" variant="outlined" append-icon="mdi-lock-reset" size="small">
+                      비밀번호 초기화
+                </v-btn>
+                <v-btn :color="common.colorList.REFRESH_BUTTON" variant="outlined" append-icon="mdi-refresh" size="small" @click="userInfoInit">
+                      초기화
+                </v-btn>
+              </v-card-actions>
+              <v-card-text>
+                <v-row>
+                  <v-col>
+                    <!-- 아이디 입력 -->
+                    <TextField
+                      label="이용자 ID"
+                      v-model="userItem.uid"
+                      :error="errorState.uid"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      clearable
+                      hide-details
+                      :readonly="userIdLock"
+                      required
+                    >
+                       <template v-slot:append>
+                            <v-btn color="primary" 
+                                   variant="outlined" 
+                                   append-icon="mdi-magnify" 
+                                   :disabled="isDupCheck"
+                                   @click="dupCheck" :readonly="userIdLock">
+                                중복검사
+                          </v-btn>
+                       </template>
+                    </TextField>
+                    <p class="text-grey-darken-1 mt-2">
+                      &#42; 아이디는 영문 또는 영어, 숫자, 특수문자 중 2가지 조합으로 구성, 특수문자는 !,@,#,$,%,^,&amp;,*,-_. 만 허용되며 동일문자 4회 이상 불가능합니다.
+                    </p>
+                    <p class="text-error mt-2">
+                      {{uidValidMsg}}
+                    </p>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <TextField
+                      label="이름"
+                      v-model="userItem.name"
+                      :error="errorState.name"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      clearable
+                      hide-details
                     />
-                </v-col>
-                <v-col>
-                  <Selectbox
-                    :items="delYnItems"
-                    item-title = "codeValCtnt"
-                    item-value = "codeVal"
-                    v-model="userItem.delYn"
-                    :error="errorState.delYn"
-                    label="삭제여부"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
-                    required
-                    :readonly="delYnLock"
-                  />
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <TextField
-                    label="최종로그인일시"
-                    v-model="userItem.lastLoginDtm"
-                    dataType="datetime"
-                    variant="outlined"
-                    dense
-                    density="compact"
-                    append-inner-icon="mdi-calendar-clock-outline"
-                    readonly
-                    hide-details
-                  ></TextField>
-                </v-col>
-                <v-col></v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <TextField
-                    label="최종거래일시"
-                    dataType="datetime"
-                    v-model="userItem.lastTrnDtm"
-                    variant="outlined"
-                    dense
-                    density="compact"
-                    append-inner-icon="mdi-calendar-clock-outline"
-                    readonly
-                    hide-details
-                  ></TextField>
-                </v-col>
-                <v-col>
-                  <TextField
-                    label="최종거래코드"
-                    v-model="userItem.lastTrnCd"
-                    variant="outlined"
-                    dense
-                    density="compact"
-                    readonly
-                    hide-details
-                  ></TextField>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <TextField
-                    label="최종거래사용자"
-                    v-model="userItem.lastTrnUid"
-                    variant="outlined"
-                    dense
-                    density="compact"
-                    readonly
-                    hide-details
-                  ></TextField>
-                </v-col>
-                <v-col>
-                  <TextField
-                    label="최종거래UUID"
-                    v-model="userItem.lastTrnUUID"
-                    variant="outlined"
-                    dense
-                    density="compact"
-                    readonly
-                    hide-details
-                  ></TextField>
-                </v-col>
-              </v-row>
-            </v-card-text>
-          </v-card>
+                  </v-col>
+                  <v-col>
+                    <TextField
+                      label="비밀번호 오류횟수"
+                      v-model="userItem.pswdErrCnt"
+                      variant="outlined"
+                      dataType="formatNumber"
+                      dense
+                      density="compact"
+                      clearable
+                      hide-details
+                      suffix="(회)"
+                      class="text-right"
+                      readonly
+                    />
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <Selectbox
+                      :items="userStateItems"
+                      item-title = "codeValCtnt"
+                      item-value = "codeVal"
+                      v-model="userItem.userState"
+                      :error="errorState.userState"
+                      label="이용자상태"
+                      variant="outlined"
+                      density="compact"
+                      formatter="v:t"
+                      hide-details
+                      emptyText=" "
+                      emptyValue=""
+                      emptyMode="prepend"
+                      required
+                      />
+                  </v-col>
+                  <v-col>
+                    <Selectbox
+                      :items="delYnItems"
+                      item-title = "codeValCtnt"
+                      item-value = "codeVal"
+                      v-model="userItem.delYn"
+                      :error="errorState.delYn"
+                      label="삭제여부"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      required
+                      :readonly="delYnLock"
+                    />
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <TextField
+                      label="최종로그인일시"
+                      v-model="userItem.lastLoginDtm"
+                      dataType="datetime"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      append-inner-icon="mdi-calendar-clock-outline"
+                      readonly
+                      hide-details
+                    ></TextField>
+                  </v-col>
+                  <v-col></v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <TextField
+                      label="최종거래일시"
+                      dataType="datetime"
+                      v-model="userItem.lastTrnDtm"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      append-inner-icon="mdi-calendar-clock-outline"
+                      readonly
+                      hide-details
+                    ></TextField>
+                  </v-col>
+                  <v-col>
+                    <TextField
+                      label="최종거래코드"
+                      v-model="userItem.lastTrnCd"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      readonly
+                      hide-details
+                    ></TextField>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <TextField
+                      label="최종거래사용자"
+                      v-model="userItem.lastTrnUid"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      readonly
+                      hide-details
+                    ></TextField>
+                  </v-col>
+                  <v-col>
+                    <TextField
+                      label="최종거래UUID"
+                      v-model="userItem.lastTrnUUID"
+                      variant="outlined"
+                      dense
+                      density="compact"
+                      readonly
+                      hide-details
+                    ></TextField>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
 
-          <v-alert border="start"
-                  border-color="primary"
-                  color="primary"
-                  icon="$info"
-                  variant="outlined"
-                  class="w-100">
-            <ul>
-              <li>
-                <span>
-                  1. 최초 회원 등록 시 초기 비밀번호는 [이용자ID]와 동일하고 최초 로그인 시 변경하도록 안내됩니다.
-                </span>
-              </li>
-              <li>
-                <span>
-                  2. 최초 회원 등록 시 [일반사용자] 역할이 자동으로 부여되며 추가로 역할을 설정하는 경우 역할정보 화면을 이용하세요.
-                </span>
-              </li>
-              <li>
-                <span>
-                  3. 회원목록의 체크박스는 다건 삭제 용도입니다. 선택된 데이터 삭제는 우측 상세정보에 있는 삭제를 이용해주세요.
-                </span>
-              </li>
-            </ul>
-          </v-alert>
-        </v-container>
+            <v-alert border="start"
+                    border-color="primary"
+                    color="primary"
+                    icon="$info"
+                    variant="outlined"
+                    class="w-100">
+              <ul>
+                <li>
+                  <span>
+                    1. 최초 회원 등록 시 초기 비밀번호는 [이용자ID]와 동일하고 최초 로그인 시 변경하도록 안내됩니다.
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    2. 최초 회원 등록 시 [일반사용자] 역할이 자동으로 부여되며 추가로 역할을 설정하는 경우 역할정보 화면을 이용하세요.
+                  </span>
+                </li>
+                <li>
+                  <span>
+                    3. 회원목록의 체크박스는 다건 삭제 용도입니다. 선택된 데이터 삭제는 우측 상세정보에 있는 삭제를 이용해주세요.
+                  </span>
+                </li>
+              </ul>
+            </v-alert>
+            </v-container>
+          <!-- </v-tabs-window-item>
+          <v-tabs-window-item :value="1">
+            <v-card flat>
+              <v-card-text>탭 2 내용</v-card-text>
+            </v-card>
+          </v-tabs-window-item>
+          <v-tabs-window-item :value="2">
+            <v-card flat>
+              <v-card-text>탭 3 내용</v-card-text>
+            </v-card>
+          </v-tabs-window-item>
+        </v-tabs-window> -->
       </div>
     </v-row>
   </div>

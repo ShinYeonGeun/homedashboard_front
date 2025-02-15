@@ -45,7 +45,7 @@
       // }
 
       if (common.isEmpty(commonStore.commCodeInfo)) {
-        await common.sendByTrnCd('CCD00101', { }, (d, r) => {
+        await common.sendByTrnCd('CCD03R01', { }, (d, r) => {
           commonStore.commCodeInfo = r.payload
         });
       }
@@ -247,6 +247,7 @@
               />
             </div>
           </div>
+          <v-card text="1. 웹서버만 기동되고 was 기동안되어 있을 때 튕기는 로직 필요함."></v-card>
         </v-tabs-window-item>
 
         <!-- 동적으로 추가되는 탭들의 내용 -->
