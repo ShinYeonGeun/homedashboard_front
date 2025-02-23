@@ -14,8 +14,6 @@ html {overflow:hidden !important;}
 .h80x {height:80px !important;}
 
 .h-m-10vh {height:calc(100% - 10vh) !important;}
-
-/* .overflow-auto {overflow: auto;} */
-
+.overflow-overlay {overflow: overlay;}
 .fx1 {flex:1 !important;}
 

@@ -10,9 +10,6 @@
         class="flex-grow-1 me-2"
         v-model="schUid"
       />
-      <!-- <v-btn icon class="me-2">
-        <v-icon>mdi-magnify</v-icon>
-      </v-btn> userStateItems-->
       <Selectbox
         :items="userStateItems" 
         item-title = "codeValCtnt"
@@ -68,7 +65,7 @@
           <span class="data-table-header-count">({{pageInfo.count}} / {{pageInfo.totalCnt}})</span>
           <v-spacer></v-spacer>
           <div>
-            <v-btn color="primary" class="ml-2" variant="flat" append-icon="mdi-delete" size="small">
+            <v-btn color="primary" class="ml-2" variant="flat" append-icon="mdi-delete" size="small" @click="deleteManyUser">
                   삭제
             </v-btn>
             <v-btn :color="common.colorList.EXCEL_DOWNLOAD" class="ml-2" variant="flat" append-icon="mdi-file-excel-outline" size="small">
@@ -90,7 +87,7 @@
             disable-sort
             v-model="userItemList"
             @click:row="onRowClick"
-            height="650"
+            height="630"
           >
             <template v-slot:[`item.pswdErrCnt`]="{ item }">
               <span>{{ common.evl(item.pswdErrCnt, 0) }}</span>
@@ -124,8 +121,8 @@
       </div>
       <v-divider vertical></v-divider>
       <!-- 오른쪽 탭 영역 -->
-      <div class="fx1 overflow-auto d-flex flex-column">
-          <v-container class="overflow-auto" height="700">
+      <div class="fx1 overflow-overlay d-flex flex-column">
+          <v-container class="overflow-overlay" height="700">
           <v-card flat>
             <v-card-title>
               회원상세정보
@@ -387,8 +384,8 @@ const uidValidMsg = ref('미입력');
 
 const headers = [
   {key:"_row", title:"No",width:60, sortable: false},
-  { key: "uid", title: "이용자ID", align:'left', width:150, headerProps:{'class':'text-center'}},
-  { key: "name", title: "이름", width:150, align:'left', headerProps:{'class':'text-center'}},
+  { key: "uid", title: "이용자ID", align:'start', width:150, headerProps:{'class':'text-center'}},
+  { key: "name", title: "이름", width:150, align:'start', headerProps:{'class':'text-center'}},
   { key: "pswdErrCnt", title: "PW오류(건)", align:' d-none', width:80},
   { key: "userState", title: "상태", width:160, headerProps:{'class':'text-center'}},
   { key: "lastLoginDtm", title: "최종로그인일자", align:'center', width:200, headerProps:{'class':'text-center'} },
@@ -512,23 +509,6 @@ const dupCheck = async () => {
 };
 
 const init = () => {
-  let contentHeight = 0;
-  // common.commonAdjustHeight();
-  // common.adjustHeight({ target: "#userListTableWrapper"
-  //                     , base: ".app-container"
-  //                     , excludes: [".search-area"] 
-  //                     , reduce:100
-  //                     });
-
-  // contentHeight = common.adjustHeight({ 
-  //                       target: "#userListTable"
-  //                     , base: "#userListTableWrapper"
-  //                     , excludes: ["#userListHeader"] 
-  //                     , reduce:50
-  //                     });
-
-  // document.querySelector("#userTabContentWrapper").style.height = `${contentHeight}px`;
-
   schUid.value = ''; //검색조건 이용자ID
   schUserState.value = ''; //검색조건 이용자상태
   schDelYn.value = ''; //검색조건 삭제여부 
@@ -559,7 +539,7 @@ const errorStateInit = () => {
 
 const userInfoInit = () => {
   userItemInit();
-  //회원목록 선택행 css 조정
+  //그리드 선택행 css 조정
   if(!common.isEmpty(selectedUserItemRow.value.element)){
     common.removeClass(selectedUserItemRow.value.element, [`bg-${common.colorList.GRID_SELECTED_ROW}`]);
   }
@@ -569,10 +549,29 @@ const userInfoInit = () => {
 };
 
 const userInfoErrStateChg = () => {
-  errorState.value.uid = common.isEmpty(userItem.value.uid) ? null:common.isEmpty(userItem.value.uid);
-  errorState.value.name = common.isEmpty(userItem.value.name) ? null:common.isEmpty(userItem.value.name);
-  errorState.value.userState = common.isEmpty(userItem.value.userState) ? null:common.isEmpty(userItem.value.userState);
-  errorState.value.delYn = common.isEmpty(userItem.value.delYn) ? null:common.isEmpty(userItem.value.delYn);
+  // errorState.value.uid = common.isEmpty(userItem.value.uid) ? null:common.isEmpty(userItem.value.uid);
+  // errorState.value.name = common.isEmpty(userItem.value.name) ? null:common.isEmpty(userItem.value.name);
+  // errorState.value.userState = common.isEmpty(userItem.value.userState) ? null:common.isEmpty(userItem.value.userState);
+  // errorState.value.delYn = common.isEmpty(userItem.value.delYn) ? null:common.isEmpty(userItem.value.delYn);
+  
+  if(common.isEmpty(selectedUserItemRow.value)) {
+    return;
+  }
+  
+  const keys = Object.keys(userItem.value);
+
+  for(const k of keys) {
+    switch(k){
+      case 'uid':
+      case 'name':
+      case 'userState':
+      case 'delYn':
+        //변경분 표시
+        errorState.value[k] = selectedUserItemRow.value.item[k] !== userItem.value[k];
+        break;
+      default:break;
+    }
+  }
 };
 
 const save = async () => {
@@ -580,16 +579,17 @@ const save = async () => {
   let trnCd = "USR00U01";
   //선택된 아이템이 없으면 등록으로 간주.
   if(common.isEmpty(selectedUserItemRow.value) || 
-     (!common.isEmpty(selectedUserItemRow.value) && userItem.value.delYn === 'Y')) {
+     (!common.isEmpty(selectedUserItemRow.value) && 
+       selectedUserItemRow.value.item.delYn === 'Y' && userItem.value.delYn === 'N')) {
     msg = "등록";
     trnCd = "USR00I01";
     if(!isDupCheck.value  && common.isEmpty(selectedUserItemRow.value)) {
       common.errorAlert("중복검사 후 등록이 가능합니다.");
       return false;
     }
-  }
+  };
   
-  userInfoErrStateChg();
+  // userInfoErrStateChg();
 
   common.confirm(`${msg}하시겠습니까?`, async () =>{
     await common.sendByTrnCd(trnCd, userItem.value, (req,res)=> {
@@ -615,6 +615,21 @@ const deleteUser = () => {
   });
 }
 
+const deleteManyUser = () => {
+  if(common.isEmpty(userItemList.value)) {
+    common.errorAlert("삭제할 이용자를 선택해주세요.");
+    return false;
+  }
+
+  common.confirm(`삭제하시겠습니까?`, async () =>{
+    await common.sendByTrnCd('USR00D02', {'uidList':userItemList.value}, (req,res)=> {
+        common.infoAlert(`삭제되었습니다.`, userInfoInit());
+    }, (req, res)=>{
+        common.errorAlert(res.payload);
+    });
+  });
+};
+
 onMounted(() => {
   init();
 });
@@ -633,24 +648,7 @@ watch( userItem, (newItem, oldItem) => {
     //등록
     uidRegexCheck();
     
-  } else {
-
-    //수정일 때 변경분 표시
-    const keys = Object.keys(userItem.value);
-
-    for(const k of keys) {
-      switch(k){
-        case 'uid':
-        case 'name':
-        case 'userState':
-        case 'delYn':
-          //변경분 표시
-          errorState.value[k] = selectedUserItemRow.value.item[k] !== userItem.value[k];
-          break;
-        default:break;
-      }
-    }
-  }
+  } 
 }
 ,{ deep: true } // 깊은 감시
 );
