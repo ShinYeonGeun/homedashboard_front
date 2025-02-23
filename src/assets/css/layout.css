@@ -2,6 +2,29 @@
 
 #ci {width:100%; height:65px; font-size: 1.2em; }
 
+  /*스크롤바 영역*/
+  ::-webkit-scrollbar {
+    height: 8px; /*가로스크롤 높이*/
+    width:8px; /*세로스크롤 넓이*/
+  }
+
+  /* 
+    스크롤바 
+    hover도 먹음
+    :vertical/:horizontal 으로 방향별로도 가능
+  */
+  ::-webkit-scrollbar-thumb  {
+    background-color: #ccc;
+    border-radius: 8px;
+  }
+
+  /*바 제외한 영역*/
+  ::-webkit-scrollbar-track {
+    background-color: #f1f1f1; 
+    /* background-color: #7d7d7d; */
+    opacity: 0.5;
+  } 
+
 #main-wrap {padding:1rem; background-color: var(--vt-c-text-dark-2);}
 #tab-wrap {/*padding-top:1rem;*//* background-color:#fff ;*/}
 #content-wrap {/*height:100vh; */overflow:auto; background-color: #fff; padding:1rem;}
@@ -32,7 +55,7 @@
 }
 
 .data-table {
-    overflow:auto;
+    overflow:overlay;
     width: 100% !important;         /* 전체 너비 고정 */
 }
 
