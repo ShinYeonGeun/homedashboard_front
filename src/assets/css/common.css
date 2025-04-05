@@ -11,7 +11,16 @@ html {overflow:hidden !important;}
 
 .p1 {padding:1rem;}
 
-.h80x {height:80px !important;}
+.h80 {height:80px !important;}
+.h100 {height:100px !important;}
+.h150 {height:150px !important;}
+.h200 {height:200px !important;}
+.h250 {height:250px !important;}
+.h300 {height:300px !important;}
+.h350 {height:350px !important;}
+.h400 {height:400px !important;}
+.h450 {height:450px !important;}
+.h500 {height:500px !important;}
 
 .h-m-10vh {height:calc(100% - 10vh) !important;}
 .overflow-overlay {overflow: overlay;}

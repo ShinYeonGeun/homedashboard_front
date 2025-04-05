@@ -245,6 +245,9 @@
                 hide-details
                 v-model="userStateModel"
               />
+              <v-btn block
+                color="primary"
+                class="mt-4" href="https://vuetifyjs.com/en/components/all/#containment" target="blank">vuetify</v-btn>
             </div>
           </div>
           <v-card text="1. 웹서버만 기동되고 was 기동안되어 있을 때 튕기는 로직 필요함."></v-card>

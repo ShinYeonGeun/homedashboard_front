@@ -35,6 +35,7 @@
 
       if (!loadComponent) {
         console.error(`Component for path "${componentPath}" not found.`);
+        common.errorAlert(`해당 메뉴를 여는데 실패하였습니다.`);
         return;
       }
 
