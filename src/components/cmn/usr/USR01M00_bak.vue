@@ -460,14 +460,14 @@ const onSearch = async (pageNo) => {
   
   gridLoading.value = true;
 
-  await common.sendByTrnCd('USR00R02', params, (d,r)=> {
-      if(!r.payload.userList.empty){
-        pageInfo.value.totalCnt = r.payload.totalElements;
-        pageInfo.value.totalPages = r.payload.totalPages;
-        pageInfo.value.first = r.payload.first;
-        pageInfo.value.last = r.payload.last;
-        pageInfo.value.count = pageInfo.value.count + r.payload.numberOfElements;
-        userList.value.push(... r.payload.userList);
+  await common.sendByTrnCd('USR00R02', params, (req, res)=> {
+      if(!res.payload.userList.empty){
+        pageInfo.value.totalCnt = res.payload.totalElements;
+        pageInfo.value.totalPages = res.payload.totalPages;
+        pageInfo.value.first = res.payload.first;
+        pageInfo.value.last = res.payload.last;
+        pageInfo.value.count = pageInfo.value.count + res.payload.numberOfElements;
+        userList.value.push(... res.payload.userList);
       }
   }, (params, res)=>{
       common.showSnackbar(`사용자 목록 조회 중 오류가 발생되었습니다.`, "red", 2000);

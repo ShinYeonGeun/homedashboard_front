@@ -82,7 +82,7 @@
             :loading="gridLoading"
             loading-text="조회중입니다. 잠시만 기다려주세요."
             hide-default-footer
-            :items-per-page="pageInfo.pageSize"
+            :key="pageInfo.pageNo"
             show-select
             disable-sort
             v-model="userItemList"
@@ -417,12 +417,7 @@ const onSearch = async (pageNo) => {
   };
 
   if(common.isEmpty(pageNo) || pageNo === 0) {
-    pageInfo.value.pageNo = 0;
-    pageInfo.value.totalCnt = 0;
-    pageInfo.value.totalPages = 0;
-    pageInfo.value.count = 0;
-    pageInfo.value.first = true;
-    pageInfo.value.last = false;
+    pageInfoInit();
     userList.value = [];
   }else{
     pageInfo.value.pageNo = pageNo;
@@ -436,14 +431,14 @@ const onSearch = async (pageNo) => {
   
   gridLoading.value = true;
 
-  await common.sendByTrnCd('USR00R02', params, (d,r)=> {
-      if(!r.payload.userList.empty){
-        pageInfo.value.totalCnt = r.payload.totalElements;
-        pageInfo.value.totalPages = r.payload.totalPages;
-        pageInfo.value.first = r.payload.first;
-        pageInfo.value.last = r.payload.last;
-        pageInfo.value.count = pageInfo.value.count + r.payload.numberOfElements;
-        userList.value.push(... r.payload.userList);
+  await common.sendByTrnCd('USR00R02', params, (req,res)=> {
+      if(!res.payload.userList.empty){
+        pageInfo.value.totalCnt = res.payload.totalElements;
+        pageInfo.value.totalPages = res.payload.totalPages;
+        pageInfo.value.first = res.payload.first;
+        pageInfo.value.last = res.payload.last;
+        pageInfo.value.count = pageInfo.value.count + res.payload.numberOfElements;
+        userList.value.push(... res.payload.userList);
       }
   }, (params, res)=>{
       common.showSnackbar(`사용자 목록 조회 중 오류가 발생되었습니다.`, "red", 2000);
@@ -516,6 +511,13 @@ const init = () => {
   userItemList.value = [];
   tab.value = 0;
   gridLoading.value = false
+  pageInfoInit();
+
+  userInfoInit();
+  errorStateInit();
+};
+
+const pageInfoInit = () => {
   pageInfo.value.pageNo = 0;
   pageInfo.value.pageSize = 20;
   pageInfo.value.totalCnt = 0;
@@ -523,9 +525,6 @@ const init = () => {
   pageInfo.value.count = 0;
   pageInfo.value.first = true;
   pageInfo.value.last = false;
-
-  userInfoInit();
-  errorStateInit();
 };
 
 const errorStateInit = () => {

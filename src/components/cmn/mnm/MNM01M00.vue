@@ -248,7 +248,7 @@
                 <v-col>
                   <TextField
                     label="최종거래사용자"
-                    v-model="menuItem.lastTrnmenuId"
+                    v-model="menuItem.lastTrnUid"
                     variant="outlined"
                     dense
                     density="compact"
@@ -258,8 +258,8 @@
                 </v-col>
                 <v-col>
                   <TextField
-                    label="최종거래UmenuId"
-                    v-model="menuItem.lastTrnUmenuId"
+                    label="최종거래UUID"
+                    v-model="menuItem.lastTrnUUID"
                     variant="outlined"
                     dense
                     density="compact"
@@ -334,16 +334,16 @@ const pageInfo = ref({
 
 const headers = [
   {key:"_row", title:"No",width:60, sortable: false},
-  { key: "menuId", title: "메뉴ID", align:'end', width:80, headerProps:{'class':'text-center'}},
+  { key: "menuId", title: "메뉴ID", align:'end', width:60, headerProps:{'class':'text-center'}},
   { key: "menuNm", title: "메뉴명", width:150, align:'start', headerProps:{'class':'text-center'}},
-  { key: "path", title: "경로", width:180, headerProps:{'class':'text-center'}},
+  { key: "path", title: "경로", width:200, headerProps:{'class':'text-center'}},
   { key: "seq", title: "순번", align:'end', width:80, headerProps:{'class':'text-center'} },
   { key: "upperMenuId", title: "상위메뉴ID", align:'end', width:100},
   { key: "delYn", title: "삭제", width:90, align:'center', headerProps:{'class':'text-center'} },
   { key: "lastTrnDtm", title: "최종거래일시", align:'center', width:180, headerProps:{'class':'text-center'} },
   { key: "lastTrnCd", title: "최종거래코드", width:100, headerProps:{'class':'text-center'} },
-  { key: "lastTrnmenuId", title: "최종거래이용자ID", width:200, headerProps:{'class':'text-center'} },
-  { key: "lastTrnUmenuId", title: "최종거래UmenuId", align:' d-none', width:80 },
+  { key: "lastTrnUid", title: "최종거래이용자ID", width:200, headerProps:{'class':'text-center'} },
+  { key: "lastTrnUUID", title: "최종거래UUID", align:' d-none', width:80 },
 ];
 
 const loadMore = async (e) => {
@@ -368,13 +368,7 @@ const onSearch = async (pageNo) => {
   };
 
   if(common.isEmpty(pageNo) || pageNo === 0) {
-    pageInfo.value.pageNo = 0;
-    pageInfo.value.totalCnt = 0;
-    pageInfo.value.totalPages = 0;
-    pageInfo.value.count = 0;
-    pageInfo.value.first = true;
-    pageInfo.value.last = false;
-    menuList.value = [];
+    pageInfoInit();
   }else{
     pageInfo.value.pageNo = pageNo;
   }
@@ -387,14 +381,14 @@ const onSearch = async (pageNo) => {
   
   gridLoading.value = true;
 
-  await common.sendByTrnCd('MNM00R01', params, (d,r)=> {
-      if(!r.payload.menuList.empty){
-        pageInfo.value.totalCnt = r.payload.totalElements;
-        pageInfo.value.totalPages = r.payload.totalPages;
-        pageInfo.value.first = r.payload.first;
-        pageInfo.value.last = r.payload.last;
-        pageInfo.value.count = pageInfo.value.count + r.payload.numberOfElements;
-        menuList.value.push(... r.payload.menuList);
+  await common.sendByTrnCd('MNM00R01', params, (req, res)=> {
+      if(!res.payload.menuList.empty){
+        pageInfo.value.totalCnt = res.payload.totalElements;
+        pageInfo.value.totalPages = res.payload.totalPages;
+        pageInfo.value.first = res.payload.first;
+        pageInfo.value.last = res.payload.last;
+        pageInfo.value.count = pageInfo.value.count + res.payload.numberOfElements;
+        menuList.value.push(... res.payload.menuList);
       }
   }, (params, res)=>{
       common.showSnackbar(`메뉴 목록 조회 중 오류가 발생되었습니다.`, "red", 2000);
@@ -441,16 +435,20 @@ const init = () => {
   menuList.value = [];
   menuItemList.value = [];
   gridLoading.value = false
-  pageInfo.value.pageNo = 0;
+  
+  pageInfoInit();
+  menuInfoInit();
+  errorStateInit();
+};
+
+const pageInfoInit = () => {
+    pageInfo.value.pageNo = 0;
   pageInfo.value.pageSize = 20;
   pageInfo.value.totalCnt = 0;
   pageInfo.value.totalPages = 0;
   pageInfo.value.count = 0;
   pageInfo.value.first = true;
   pageInfo.value.last = false;
-
-  menuInfoInit();
-  errorStateInit();
 };
 
 const errorStateInit = () => {
@@ -474,11 +472,7 @@ const menuInfoInit = () => {
 };
 
 const userInfoErrStateChg = () => {
-  // errorState.value.menuId = common.isEmpty(menuItem.value.menuId) ? null:common.isEmpty(menuItem.value.menuId);
-  // errorState.value.name = common.isEmpty(menuItem.value.name) ? null:common.isEmpty(menuItem.value.name);
-  // errorState.value.userState = common.isEmpty(menuItem.value.userState) ? null:common.isEmpty(menuItem.value.userState);
-  // errorState.value.delYn = common.isEmpty(menuItem.value.delYn) ? null:common.isEmpty(menuItem.value.delYn);
-  
+
   if(common.isEmpty(selectedMenuItemRow.value)) {
     return;
   }

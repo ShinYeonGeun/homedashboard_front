@@ -93,7 +93,7 @@
             :loading="gridLoading"
             loading-text="조회중입니다. 잠시만 기다려주세요."
             hide-default-footer
-            :items-per-page="pageInfo.pageSize"
+            :key="pageInfo.pageNo"
             show-select
             disable-sort
             v-model="trnCdItemList"
@@ -210,6 +210,14 @@
                   hide-details
                   required
                 />
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-textarea label="Label"
+                            variant="outlined"
+                            v-model="trnCdItem.description"
+                            :error="errorState.description"></v-textarea>
               </v-col>
             </v-row>
             <v-row>
@@ -343,6 +351,7 @@ const headers = [
   { key: "trnNm", title: "거래명", width:160, headerProps:{'class':'text-center'}},
   { key: "svcNm", title: "서비스명", width:160, headerProps:{'class':'text-center'}},
   { key: "mtdNm", title: "메소드명", width:200, headerProps:{'class':'text-center'} },
+  { key: "description", title: "설명", width:200, align:'left', headerProps:{'class':'text-center'} },
   { key: "tmotMs", title: "타임아웃(ms)", align:'center', width:200, headerProps:{'class':'text-center'} },
   { key: "delYn", title: "삭제", width:90, align:'center', headerProps:{'class':'text-center'} },
   { key: "lastTrnDtm", title: "최종거래일시", align:'center', width:180, headerProps:{'class':'text-center'} },
@@ -372,14 +381,9 @@ const onSearch = async (pageNo) => {
       , 'mtdNm' : schMtdNm.value
       , 'delYn': schDelYn.value.codeVal
   };
-console.log("@@@@@@", params);
+
   if(common.isEmpty(pageNo) || pageNo === 0) {
-    pageInfo.value.pageNo = 0;
-    pageInfo.value.totalCnt = 0;
-    pageInfo.value.totalPages = 0;
-    pageInfo.value.count = 0;
-    pageInfo.value.first = true;
-    pageInfo.value.last = false;
+    pageInfoInit();
     trnCdList.value = [];
   }else{
     pageInfo.value.pageNo = pageNo;
@@ -393,14 +397,14 @@ console.log("@@@@@@", params);
   
   gridLoading.value = true;
 
-  await common.sendByTrnCd('TRN00R02', params, (d,r)=> {
-      if(!r.payload.trnCdList.empty){
-        pageInfo.value.totalCnt = r.payload.totalElements;
-        pageInfo.value.totalPages = r.payload.totalPages;
-        pageInfo.value.first = r.payload.first;
-        pageInfo.value.last = r.payload.last;
-        pageInfo.value.count = pageInfo.value.count + r.payload.numberOfElements;
-        trnCdList.value.push(... r.payload.trnCdList);
+  await common.sendByTrnCd('TRN00R02', params, (req, res)=> {
+      if(!res.payload.trnCdList.empty){
+        pageInfo.value.totalCnt = res.payload.totalElements;
+        pageInfo.value.totalPages = res.payload.totalPages;
+        pageInfo.value.first = res.payload.first;
+        pageInfo.value.last = res.payload.last;
+        pageInfo.value.count = pageInfo.value.count + res.payload.numberOfElements;
+        trnCdList.value.push(... res.payload.trnCdList);
       }
   }, (params, res)=>{
       common.showSnackbar(`거래코드 목록 조회 중 오류가 발생되었습니다.`, "red", 2000);
@@ -472,6 +476,14 @@ const init = () => {
   trnCdItemList.value = [];
   tab.value = 0;
   gridLoading.value = false
+
+  pageInfoInit();
+
+  trnCdInfoInit();
+  errorStateInit();
+};
+
+const pageInfoInit = () => {
   pageInfo.value.pageNo = 0;
   pageInfo.value.pageSize = 20;
   pageInfo.value.totalCnt = 0;
@@ -479,9 +491,6 @@ const init = () => {
   pageInfo.value.count = 0;
   pageInfo.value.first = true;
   pageInfo.value.last = false;
-
-  trnCdInfoInit();
-  errorStateInit();
 };
 
 const errorStateInit = () => {
@@ -490,6 +499,7 @@ const errorStateInit = () => {
                       trnNm:null,
                       svcNm:null,
                       mtdNm:null,
+                      description:null,
                       tmotMs:null,
                       delYn:null,
                     };
@@ -510,12 +520,6 @@ const trnCdInfoInit = () => {
 };
 
 const trnCdInfoErrStateChg = () => {
-  // errorState.value.trnCd = common.isEmpty(trnCdItem.value.trnCd) ? null:common.isEmpty(trnCdItem.value.trnCd);
-  // errorState.value.trnNm = common.isEmpty(trnCdItem.value.trnNm) ? null:common.isEmpty(trnCdItem.value.trnNm);
-  // errorState.value.svcNm = common.isEmpty(trnCdItem.value.svcNm) ? null:common.isEmpty(trnCdItem.value.svcNm);
-  // errorState.value.mtdNm = common.isEmpty(trnCdItem.value.mtdNm) ? null:common.isEmpty(trnCdItem.value.mtdNm);
-  // errorState.value.tmotMs = common.isEmpty(trnCdItem.value.tmotMs) ? null:common.isEmpty(trnCdItem.value.tmotMs);
-  // errorState.value.delYn = common.isEmpty(trnCdItem.value.delYn) ? null:common.isEmpty(trnCdItem.value.delYn);
   if(common.isEmpty(selectedTrnCdItemRow.value)) {
     return;
   }
@@ -531,6 +535,9 @@ const trnCdInfoErrStateChg = () => {
       case 'delYn':
         //변경분 표시
         errorState.value[k] = selectedTrnCdItemRow.value.item[k] !== trnCdItem.value[k];
+        break;
+      case 'description':
+        errorState.value[k] = common.evl(selectedTrnCdItemRow.value.item[k], "") !== common.evl(trnCdItem.value[k], "");
         break;
       case 'tmotMs':
         errorState.value[k] = selectedTrnCdItemRow.value.item[k] != common.cleanNumber(trnCdItem.value[k]);
