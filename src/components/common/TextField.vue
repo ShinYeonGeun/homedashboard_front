@@ -2,7 +2,8 @@
   <v-text-field
     :model-value="formattedValue" 
     @update:modelValue="updateValue"
-    v-bind="$attrs"
+    :hide-details="localHideDetails"
+    v-bind="{density: localDensity, variant:localVariant, ...$attrs}"
   >
   <!-- append 슬롯을 받아서 v-text-field의 append 슬롯에 전달 -->
     <template v-if="$slots.prepend" v-slot:prepend>
@@ -38,6 +39,18 @@ const props = defineProps({
   modelValue: {
     type: [String, Number],
     default: ""  // modelValue가 없을 경우 기본값 설정
+  },
+  hideDetails: {
+    type:Boolean,
+    default: true
+  },
+  density: {
+    type:String,
+    default: "compact"
+  },
+  variant: {
+    type:String,
+    default: "outlined"
   }
 });
 
@@ -47,6 +60,9 @@ const emit = defineEmits(['update:modelValue']);
 const localDataType = ref(props.dataType);
 const localFormat = ref(props.format);
 const localRequired = ref(props.required);
+const localDensity = ref(props.density);
+const localHideDetails = ref(props.hideDetails);
+const localVariant = ref(props.variant);
 
 // 원본 값 관리
 const rawValue = ref(props.modelValue);
@@ -55,7 +71,7 @@ const rawValue = ref(props.modelValue);
 const formattedValue = computed(() => {
   const type = common.evl(localDataType.value, "").toUpperCase(); 
   let newValue = rawValue.value;
-  
+
   if(newValue !== "") {
     switch(type) {
         case "NUMBER":
@@ -63,10 +79,13 @@ const formattedValue = computed(() => {
           newValue = common.numberFormat(newValue);
           break;
         case "DATE":
-          newValue = common.getDateString(newValue, common.evl(localFormat.value, "YYYY-MM-DD"));
+          newValue = common.getDateString(newValue, common.evl(localFormat.value, "yyyy-MM-dd"));
           break;
         case "DATETIME":
-          newValue = common.getDateString(newValue, common.evl(localFormat.value, "YYYY-MM-DD HH:mm:ss"));
+          newValue = common.getDateString(newValue, common.evl(localFormat.value, "yyyy-MM-dd HH:mm:ss"));
+          break;
+        case "TIME":
+          newValue = common.getTimeString(newValue, common.evl(localFormat.value, "HH:mm:ss"));
           break;
         default:
           break;
@@ -77,28 +96,31 @@ const formattedValue = computed(() => {
 
 // 입력 이벤트 처리
 const updateValue = (inputValue) => {
-  rawValue.value = inputValue;  // 원본 값 그대로 저장
-  emit("update:modelValue", inputValue);  // 부모에 원본 값 전달
+  const type = common.evl(localDataType.value, "").toUpperCase();
+
+  if (inputValue !== rawValue.value) {
+    switch(type) {
+        case "NUMBER":
+        case "FORMATNUMBER":
+          rawValue.value = common.cleanNumber(inputValue);
+          break;
+        case "TIME":
+          rawValue.value = inputValue.replace(/[^0-9]/g, '');
+          break;
+        default:
+          rawValue.value = inputValue;  // 부모에서 전달된 modelValue를 업데이트
+          break;
+    }
+  }
+
+  emit("update:modelValue", rawValue.value);  // 부모에 원본 값 전달
 };
 
 // watch로 modelValue 변경 감지
 watch(() => props.modelValue, (newValue) => {
+  
+    updateValue(newValue);
 
-// watch( props.modelValue.value, (newValue, oldValue) => {  
-  const type = common.evl(localDataType.value, "").toUpperCase();
-
-  if (newValue !== rawValue.value) {
-    switch(type) {
-        case "NUMBER":
-        case "FORMATNUMBER":
-          rawValue.value = common.cleanNumber(newValue);
-          break;
-        default:
-          rawValue.value = newValue;  // 부모에서 전달된 modelValue를 업데이트
-          break;
-    }
-    
-  }
 }, { immediate: true });  // 최초에도 감지하도록 설정
 
 </script>

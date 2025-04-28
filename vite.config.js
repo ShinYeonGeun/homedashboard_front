@@ -20,7 +20,9 @@ export default defineConfig({
   vue: {
     template: {
       compilerOptions: {
-        isCustomElement: (tag) => tag.startsWith('v-') || tag === 'v-treeview',  // 'v-'로 시작하는 태그는 모두 커스텀 요소로 인식하지 않도록 설정
+        isCustomElement: (tag) => tag.startsWith('v-') || // 'v-'로 시작하는 태그는 모두 커스텀 요소로 인식하지 않도록 설정
+          tag === 'v-treeview' ||
+          tag === 'Datepicker',
       },
     },
   },

@@ -112,11 +112,11 @@
               <span>{{index + 1}}</span>
             </template>
             <template v-slot:[`item.lastLoginDtm`]="{ item }">
-              <span>{{ common.getDateString(item.lastLoginDtm, 'YYYY-MM-DD HH:MM:SS', "-") }}</span>
+              <span>{{ common.getDateString(item.lastLoginDtm, 'yyyy-MM-dd HH:MM:SS', "-") }}</span>
               <v-icon v-if="!common.isEmpty(item.lastLoginDtm)" icon="mdi-calendar-clock-outline" />
             </template>
             <template v-slot:[`item.lastTrnDtm`]="{ item }">
-              <span>{{ common.getDateString(item.lastTrnDtm, 'YYYY-MM-DD HH:MM:SS') }}</span>
+              <span>{{ common.getDateString(item.lastTrnDtm, 'yyyy-MM-dd HH:MM:SS') }}</span>
               <v-icon icon="mdi-calendar-clock-outline" />
             </template>
           </v-data-table-virtual>

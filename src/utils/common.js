@@ -168,8 +168,45 @@ export const ignoreEquals = (s, v) => {
 	return evl(s, "").toLowerCase() === evl(v, "").toLowerCase()
 };
 
+export const parseDate = (str, format) => {
+
+	let defaultFormat = "yyyyMMdd";
+
+	if (isEmpty(str)) {
+		return false;
+	} else if ((typeof str).toLowerCase() === 'number') {
+		return new Date(str);
+	}
+
+	str = str.replace(/[^0-9]/g, '');
+	format = evl(format, str.length === 8 ? "yyyyMMdd" : 'yyyyMMddHHmmss');
+
+	if (str.length < 8) {
+		return "";
+	}
+
+	let year = parseInt(str.substring(0, 4));
+	let month = parseInt(str.substring(4, 6)) - 1; // 월은 0부터 시작
+	let day = parseInt(str.substring(6, 8));
+	let hour = 0;
+	let minute = 0;
+	let second = 0;
+
+	switch (format) {
+		case "yyyyMMddHHmmss":
+		case "yyyyMMdd HHmmss":
+		case "yyyy-MM-dd HH:mm:ss":
+			hour = parseInt(str.substring(8, 10));
+			minute = parseInt(str.substring(10, 12));
+			second = parseInt(str.substring(12, 14));
+		default: break;
+	}
+
+	return new Date(year, month, day, hour, minute, second);
+};
+
 export const getDateString = (date, format, emptyChar) => {
-	return isEmpty(date) ? nvl(emptyChar, "") : getDateFormat(new Date(date), format);
+	return isEmpty(date) ? nvl(emptyChar, "") : getDateFormat(parseDate(date), format);
 };
 
 export const getDateFormat = (date, format) => {
@@ -180,22 +217,67 @@ export const getDateFormat = (date, format) => {
 	const minutes = date.getMinutes().toString().padStart(2, '0');
 	const seconds = date.getSeconds().toString().padStart(2, '0');
 
-	format = evl(format, "").toUpperCase();
+	format = evl(format, "");
 
 	switch (format) {
-		case "YYYYMMDD":
+		case "yyyyMMdd":
 			return `${year}${month}${day}`;
-		case "YYYY-MM-DD":
+		case "yyyy-MM-dd":
 			return `${year}-${month}-${day}`;
-		case "YYYYMMDDHHMMSS":
+		case "yyyyMMddHHmmss":
 			return `${year}${month}${day}${hours}${minutes}${seconds}`;
-		case "YYYYMMDD HHMMSS":
+		case "yyyyMMdd HHmmss":
 			return `${year}${month}${day} ${hours}${minutes}${seconds}`;
-		case "YYYY-MM-DD HH:MM:SS":
+		case "yyyy-MM-dd HH:mm:ss":
 			return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 		default:
 			return date;
 	}
+};
+
+export const getTimeString = (timeStr, format) => {
+
+	const rawValue = timeStr;
+	timeStr = evl(timeStr, "").replace(/[^0-9]/g, '');
+	let hours = "";//timeStr.slice(0, 2)
+	let minutes = "";//timeStr.slice(2, 4)
+	let seconds = "";//timeStr.slice(4, 6)
+	format = evl(format, "HHmmss");
+	console.log("timestr", rawValue)
+	switch (timeStr.length) {
+		case 2:
+			hours = timeStr.slice(0, 2);
+		case 4:
+			hours = timeStr.slice(0, 2);
+			minutes = timeStr.slice(2, 4);
+		case 6:
+			hours = timeStr.slice(0, 2);
+			minutes = timeStr.slice(2, 4);
+			seconds = timeStr.slice(4, 6);
+			break;
+		default:
+			return rawValue;
+	};
+
+	let result = format;
+
+	if (isEmpty(hours)) {
+		result = result.replace(/HH/g, "");
+	} else {
+		result = result.replace(/HH/g, hours);
+	}
+	if (isEmpty(minutes)) {
+		result = result.replace(/[^0-9]+mm/g, '');
+	} else {
+		result = result.replace(/mm/g, minutes);
+	}
+	if (isEmpty(seconds)) {
+		result = result.replace(/[^0-9]+ss/g, '');
+	} else {
+		result = result.replaceAll(/ss/g, seconds);
+	}
+
+	return result;
 };
 
 export const addClass = (element, classList) => {
@@ -406,7 +488,7 @@ export const searchComCodeList = async ({
 	codeDetailDelYn = ''
 }) => {
 	let codes = {};
-	await sendByTrnCd('CCD03R01', { codeList: ['USER_STATE'] }, (d, r) => {
+	await sendByTrnCd('CCD03R01', { 'codeList': codeList }, (d, r) => {
 		if (r.resultCd === 'S') {
 			Object.assign(codes, r.payload);
 		} else {
@@ -425,7 +507,8 @@ export const colorList = {
 	EXCEL_DOWNLOAD: '#217346',
 	DANGER: '#b71c1c',
 	REFRESH_BUTTON: 'grey-darken-1',
-	GRID_SELECTED_ROW: 'grey-lighten-3'
+	GRID_SELECTED_ROW: 'grey-lighten-3',
+	WARN: '#FFCA28'
 }
 
 // 깊은 복사 함수
@@ -475,4 +558,27 @@ export const decryptAES = (cipherText) => {
 		mode: CryptoJS.mode.CBC,
 		padding: CryptoJS.pad.Pkcs7,
 	}).toString(CryptoJS.enc.Utf8);
+};
+
+export const newPageInfo = () => {
+	return {
+		pageNo: 0,
+		pageSize: 20,
+		totalPages: 0,
+		totalCnt: 0,
+		count: 0,
+		first: true,
+		last: false
+	};
+};
+
+
+export const isJsonString = (str) => {
+	if (typeof str !== 'string') return false;
+	try {
+		const parsed = JSON.parse(str);
+		return parsed && typeof parsed === 'object' && !Array.isArray(parsed);
+	} catch (e) {
+		return false;
+	}
 };

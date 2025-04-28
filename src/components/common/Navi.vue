@@ -89,8 +89,12 @@ const findItemById = (items, id) => {
           hide-expand-icon
           @click:select="onNodeClick"
         >
+        <template v-slot:prepend="{ item, isOpen }">
+          <span v-if="common.isEmpty(item.children) && item.level > 1">
+            &nbsp;&nbsp;&nbsp;&nbsp;
+          </span>
+        </template>
         <template v-slot:label="{ item }">
-          <!-- 체크박스를 숨기고, 항목 텍스트만 표시 -->
           <span>{{ item.menuNm }}</span>
         </template>
       </v-treeview>

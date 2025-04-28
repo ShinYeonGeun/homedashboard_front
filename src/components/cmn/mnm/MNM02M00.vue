@@ -1,48 +1,46 @@
 <template>
     <div>
         <div class="search-area" align="center">
-            <TextField
-                label="그룹코드"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="flex-grow-1 me-2"
-                v-model="schGrpCd"
-            />
-            <TextField
-                label="그룹명"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="flex-grow-1 me-2"
-                v-model="schGrpNm"
-            />
-            <TextField
-                label="적요"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="flex-grow-1 me-2"
-                v-model="schRemark"
-            />
-            <v-spacer></v-spacer>
-            <v-btn
-                variant="outlined"
-                class="me-2"
-                color="primary"
-                append-icon="mdi-magnify"
-                @click="(e)=>{onSearch(0);}"
-            >
-                검색
-            </v-btn>
-            <v-btn
-                variant="outlined"
-                color="seccondary"
-                append-icon="mdi-refresh"
-                @click="init"
-            >
-                초기화
-            </v-btn>
+          <v-row justify="center" align="center" class="ml-4">
+            <v-col>
+                <v-row>
+                <TextField
+                    label="그룹코드"
+                    class="flex-grow-1 me-2 mw150"
+                    v-model="schGrpCd"
+                />
+                <TextField
+                    label="그룹명"
+                    class="flex-grow-1 me-2 mw250"
+                    v-model="schGrpNm"
+                />
+                <TextField
+                    label="적요"
+                    class="flex-grow-1 me-2 mw300"
+                    v-model="schRemark"
+                />
+            </v-row>
+          </v-col> 
+            <v-col class="btn-group"> 
+              <v-btn
+                  variant="outlined"
+                  class="me-2"
+                  color="primary"
+                  append-icon="mdi-magnify"
+                  @click="(e)=>{onSearch(0);}"
+              >
+                  검색
+              </v-btn>
+              <v-btn
+                  variant="outlined"
+                  color="seccondary"
+                  append-icon="mdi-refresh"
+                  @click="init"
+              >
+                  초기화
+              </v-btn>
+            </v-col>
+          </v-row>
         </div>
          <!-- 본문 영역 -->
         <v-row class="content-area">
@@ -87,7 +85,6 @@
                         그룹별 메뉴권한 
                         </v-card-title>
                         <v-card-actions class="d-flex justify-end">
-                          {{filteredMenuList}}
                         <v-btn color="primary" 
                                 variant="outlined" 
                                 append-icon="mdi-content-save" 
@@ -111,10 +108,9 @@
                             open-all
                             selectable>
                               <template v-slot:prepend="{ item }">
-                                <v-icon
-                                  v-if="common.isEmpty(item.children)"
-                                  :icon="`mdi-monitor-cellphone`"
-                                ></v-icon>
+                                <span v-if="common.isEmpty(item.children) && item.level > 1">
+                                  &nbsp;&nbsp;&nbsp;&nbsp;
+                                </span>
                               </template>
                               <template v-slot:title="{ item }">
                                 <span>
@@ -210,6 +206,7 @@ const onSearch = async (pageNo) => {
 
   if(common.isEmpty(pageNo) || pageNo === 0) {
     pageInfoInit();
+    groupList.value = [];
   }else{
     pageInfo.value.pageNo = pageNo;
   }
@@ -223,14 +220,15 @@ const onSearch = async (pageNo) => {
   gridLoading.value = true;
 
   await common.sendByTrnCd('USR11R01', schParams.value, (req, res)=> {
-      if(!res.payload.groupList.empty){
+      if(res.payload.empty){
+        common.showSnackbar(`조회된 데이터가 없습니다.`, "primary", 3000);
+      } else {
         pageInfo.value.totalCnt = res.payload.totalElements;
         pageInfo.value.totalPages = res.payload.totalPages;
         pageInfo.value.first = res.payload.first;
         pageInfo.value.last = res.payload.last;
         pageInfo.value.count = pageInfo.value.count + res.payload.numberOfElements;
         groupList.value.push(... res.payload.groupList);
-        
       }
   }, (params, res)=>{
       common.showSnackbar(`이용자그룹 목록 조회 중 오류가 발생되었습니다.`, "red", 2000);

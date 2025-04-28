@@ -70,3 +70,5 @@
   text-overflow: ellipsis; /* 말줄임 처리 */
 }
 .v-data-table th .v-data-table-header__content {display: block;}
+
+.search-area .btn-group {max-width:300px; flex:0 0 200px; display:flex; }

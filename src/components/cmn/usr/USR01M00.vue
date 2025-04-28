@@ -2,58 +2,56 @@
   <div>
     <!-- 검색 영역 -->
     <div class="search-area" align="center">
-      <TextField
-        label="이용자 ID"
-        variant="outlined"
-        density="compact"
-        hide-details
-        class="flex-grow-1 me-2"
-        v-model="schUid"
-      />
-      <Selectbox
-        :items="userStateItems" 
-        item-title = "codeValCtnt"
-        item-value = "codeVal"
-        v-model="schUserState"
-        label="이용자상태"
-        variant="outlined"
-        density="compact"
-        hide-details
-        class="me-2"
-        emptyText="전체"
-        emptyValue=""
-      />
-      <Selectbox
-        :items="delYnItems"
-        item-title = "codeValCtnt"
-        item-value = "codeVal"
-        v-model="schDelYn"
-        label="삭제여부"
-        variant="outlined"
-        density="compact"
-        hide-details
-        class="me-2"
-        emptyText="전체"
-        emptyValue=""
-      />
-      <v-spacer></v-spacer>
-      <v-btn
-        variant="outlined"
-        class="me-2"
-        color="primary"
-        append-icon="mdi-magnify"
-        @click="(e)=>{onSearch(0);}"
-      >
-        검색
-      </v-btn>
-      <v-btn
-        variant="outlined"
-        color="seccondary"
-        append-icon="mdi-refresh"
-        @click="init"
-      >
-        초기화
-      </v-btn>
+      <v-row justify="center" align="center" class="ml-4">
+        <v-col>
+            <v-row>
+              <TextField
+                label="이용자 ID"
+                class="flex-grow-1 me-2 mw300"
+                v-model="schUid"
+              />
+              <Selectbox
+                :items="userStateItems" 
+                item-title = "codeValCtnt"
+                item-value = "codeVal"
+                v-model="schUserState"
+                label="이용자상태"
+                class="me-2 mw200"
+                emptyText="전체"
+                emptyValue=""
+              />
+              <Selectbox
+                :items="delYnItems"
+                item-title = "codeValCtnt"
+                item-value = "codeVal"
+                v-model="schDelYn"
+                label="삭제여부"
+                class="me-2 mw200"
+                emptyText="전체"
+                emptyValue=""
+              />
+        </v-row>
+      </v-col> 
+      <v-col class="btn-group"> 
+          <v-btn
+            variant="outlined"
+            class="me-2"
+            color="primary"
+            append-icon="mdi-magnify"
+            @click="(e)=>{onSearch(0);}"
+          >
+            검색
+          </v-btn>
+          <v-btn
+            variant="outlined"
+            color="seccondary"
+            append-icon="mdi-refresh"
+            @click="init"
+          >
+            초기화
+          </v-btn>
+        </v-col>
+      </v-row>
     </div>
 
     <!-- 본문 영역 -->
@@ -98,10 +96,7 @@
               item-title = "codeValCtnt"
               item-value = "codeVal"
               v-model="item.userState"
-              variant="outlined"
-              density="compact"
               formatter="v:t"
-              hide-details
               readonly
               />
             </template>
@@ -109,11 +104,11 @@
               <span>{{index + 1}}</span>
             </template>
             <template v-slot:[`item.lastLoginDtm`]="{ item }">
-              <span>{{ common.getDateString(item.lastLoginDtm, 'YYYY-MM-DD HH:MM:SS', "-") }}</span>
+              <span>{{ common.getDateString(item.lastLoginDtm, 'yyyy-MM-dd HH:MM:SS', "-") }}</span>
               <v-icon v-if="!common.isEmpty(item.lastLoginDtm)" icon="mdi-calendar-clock-outline" />
             </template>
             <template v-slot:[`item.lastTrnDtm`]="{ item }">
-              <span>{{ common.getDateString(item.lastTrnDtm, 'YYYY-MM-DD HH:MM:SS') }}</span>
+              <span>{{ common.getDateString(item.lastTrnDtm, 'yyyy-MM-dd HH:MM:SS') }}</span>
               <v-icon icon="mdi-calendar-clock-outline" />
             </template>
           </v-data-table-virtual>
@@ -157,11 +152,8 @@
                     label="이용자 ID"
                     v-model="userItem.uid"
                     :error="errorState.uid"
-                    variant="outlined"
                     dense
-                    density="compact"
                     clearable
-                    hide-details
                     :readonly="userIdLock"
                     required
                   >
@@ -189,23 +181,17 @@
                     label="이름"
                     v-model="userItem.name"
                     :error="errorState.name"
-                    variant="outlined"
                     dense
-                    density="compact"
                     clearable
-                    hide-details
                   />
                 </v-col>
                 <v-col>
                   <TextField
                     label="비밀번호 오류횟수"
                     v-model="userItem.pswdErrCnt"
-                    variant="outlined"
                     dataType="formatNumber"
                     dense
-                    density="compact"
                     clearable
-                    hide-details
                     suffix="(회)"
                     class="text-right"
                     readonly
@@ -221,10 +207,7 @@
                     v-model="userItem.userState"
                     :error="errorState.userState"
                     label="이용자상태"
-                    variant="outlined"
-                    density="compact"
                     formatter="v:t"
-                    hide-details
                     emptyText=" "
                     emptyValue=""
                     emptyMode="prepend"
@@ -239,9 +222,6 @@
                     v-model="userItem.delYn"
                     :error="errorState.delYn"
                     label="삭제여부"
-                    variant="outlined"
-                    density="compact"
-                    hide-details
                     required
                     :readonly="delYnLock"
                   />
@@ -253,12 +233,9 @@
                     label="최종로그인일시"
                     v-model="userItem.lastLoginDtm"
                     dataType="datetime"
-                    variant="outlined"
                     dense
-                    density="compact"
                     append-inner-icon="mdi-calendar-clock-outline"
                     readonly
-                    hide-details
                   ></TextField>
                 </v-col>
                 <v-col></v-col>
@@ -269,23 +246,17 @@
                     label="최종거래일시"
                     dataType="datetime"
                     v-model="userItem.lastTrnDtm"
-                    variant="outlined"
                     dense
-                    density="compact"
                     append-inner-icon="mdi-calendar-clock-outline"
                     readonly
-                    hide-details
                   ></TextField>
                 </v-col>
                 <v-col>
                   <TextField
                     label="최종거래코드"
                     v-model="userItem.lastTrnCd"
-                    variant="outlined"
                     dense
-                    density="compact"
                     readonly
-                    hide-details
                   ></TextField>
                 </v-col>
               </v-row>
@@ -294,22 +265,16 @@
                   <TextField
                     label="최종거래사용자"
                     v-model="userItem.lastTrnUid"
-                    variant="outlined"
                     dense
-                    density="compact"
                     readonly
-                    hide-details
                   ></TextField>
                 </v-col>
                 <v-col>
                   <TextField
                     label="최종거래UUID"
                     v-model="userItem.lastTrnUUID"
-                    variant="outlined"
                     dense
-                    density="compact"
                     readonly
-                    hide-details
                   ></TextField>
                 </v-col>
               </v-row>
@@ -432,7 +397,9 @@ const onSearch = async (pageNo) => {
   gridLoading.value = true;
 
   await common.sendByTrnCd('USR00R02', params, (req,res)=> {
-      if(!res.payload.userList.empty){
+      if(res.payload.empty){
+        common.showSnackbar(`조회된 데이터가 없습니다.`, "primary", 3000);
+      } else {
         pageInfo.value.totalCnt = res.payload.totalElements;
         pageInfo.value.totalPages = res.payload.totalPages;
         pageInfo.value.first = res.payload.first;

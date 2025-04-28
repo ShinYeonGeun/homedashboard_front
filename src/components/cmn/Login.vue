@@ -100,6 +100,7 @@ const doLogin = async (e) => {
             variant="outlined"
             dense
             ref="idRef"
+            :hideDetails="false"
             @keydown='doLogin'
           ></TextField>
 
@@ -111,6 +112,7 @@ const doLogin = async (e) => {
             variant="outlined"
             dense
             ref="pwdRef"
+            :hideDetails="false"
             type="password"
             @keydown='doLogin'
           ></TextField>
