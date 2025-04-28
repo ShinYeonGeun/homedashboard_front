@@ -5,7 +5,9 @@
     import { onMounted, computed, ref, watch  } from 'vue';
     import { useRouter } from 'vue-router';
     import Selectbox from '@/components/common/Selectbox.vue'
-    
+    import Datepicker from '@/components/common/Datepicker.vue'
+    import TextField from '@/components/common/TextField.vue'
+
     const mainStore = useMainStore();
     const commonStore = useCommonStore();
     const router = useRouter();
@@ -14,6 +16,9 @@
     const commCodeInfo = ref({});
     const userState = ref([]);
     const userStateModel = ref({});
+    const datepickerValue = ref('');
+    const schToTime = ref('000000');
+
     onMounted(async () => {
       // 초기 경로를 설정
       router.push('/');
@@ -240,17 +245,36 @@
                 :items="userState"
                 item-title = "codeValCtnt"
                 item-value = "codeVal"
-                variant="outlined"
-                density="compact"
-                hide-details
                 v-model="userStateModel"
               />
               <v-btn block
                 color="primary"
                 class="mt-4" href="https://vuetifyjs.com/en/components/all/#containment" target="blank">vuetify</v-btn>
+              <v-btn block
+                color="primary"
+                class="mt-4" href="https://pictogrammers.com/library/mdi/" target="blank">ICON</v-btn>
             </div>
           </div>
           <v-card text="1. 웹서버만 기동되고 was 기동안되어 있을 때 튕기는 로직 필요함."></v-card>
+          <div>
+            <v-row>
+              <v-col>
+          <span>{{datepickerValue}}</span>
+              </v-col>
+              <v-col>
+          <Datepicker label="aaa" v-model="datepickerValue" format="yyyy-MM-dd"/>
+              </v-col>
+              <v-col>
+                <TextField
+                            label="HHmmss"
+                            class="flex-grow-1 ml-2 mw100"
+                            dataType="time"
+                            format="HH:mm:ss"
+                            v-model="schToTime"
+                        />
+              </v-col>
+            </v-row>
+          </div>
         </v-tabs-window-item>
 
         <!-- 동적으로 추가되는 탭들의 내용 -->

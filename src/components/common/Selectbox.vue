@@ -1,7 +1,8 @@
 <template>
   <!-- 부모에서 전달된 모든 속성 전달 -->
   <v-select
-    v-bind="$attrs"
+    :hide-details="localHideDetails"
+    v-bind="{density: localDensity, variant:localVariant, ...$attrs}"
     :model-value="selectedItem"
     @update:modelValue="updateSelectedItem"
     :items="formattedItems"
@@ -54,6 +55,18 @@ const props = defineProps({
     type: String,
     default: 'prepend',
   },
+  hideDetails: {
+    type:Boolean,
+    default: true
+  },
+  density: {
+    type:String,
+    default: "compact"
+  },
+  variant: {
+    type:String,
+    default: "outlined"
+  }
 });
 
 // `useAttrs`를 이용하여 $attrs 접근
@@ -67,6 +80,9 @@ const localRequired = ref(props.required);
 const emptyText = ref(props.emptyText);
 const emptyValue = ref(props.emptyValue);
 const emptyMode = ref(props.emptyMode);
+const localDensity = ref(props.density);
+const localHideDetails = ref(props.hideDetails);
+const localVariant = ref(props.variant);
 
 // 선택된 항목
 const selectedItem = ref(localModelValue.value);

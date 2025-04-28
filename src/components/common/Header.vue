@@ -48,7 +48,7 @@
         for(const key in data){
           switch(key) {
             case 'loginDtm':
-              loginInfo.value[key] = common.getDateString(data[key] * 1000, 'YYYY-MM-DD HH:MM:SS');
+              loginInfo.value[key] = common.getDateString(data[key] * 1000, 'yyyy-MM-dd HH:MM:SS');
               break;
             default:
               console.log("k", key, data[key]);

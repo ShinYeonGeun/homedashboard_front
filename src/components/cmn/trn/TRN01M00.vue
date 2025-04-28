@@ -2,69 +2,61 @@
   <div>
     <!-- 검색 영역 -->
     <div class="search-area" align="center">
-      <TextField
-        label="거래코드"
-        variant="outlined"
-        density="compact"
-        hide-details
-        class="flex-grow-1 me-2"
-        v-model="schTrnCd"
-      />
-      <TextField
-        label="거래명"
-        variant="outlined"
-        density="compact"
-        hide-details
-        class="flex-grow-1 me-2"
-        v-model="schTrnNm"
-      />
-      <TextField
-        label="서비스명"
-        variant="outlined"
-        density="compact"
-        hide-details
-        class="flex-grow-1 me-2"
-        v-model="schSvcNm"
-      />
-      <TextField
-        label="메소드명"
-        variant="outlined"
-        density="compact"
-        hide-details
-        class="flex-grow-1 me-2"
-        v-model="schMtdNm"
-      />
-      <Selectbox
-        :items="delYnItems"
-        item-title = "codeValCtnt"
-        item-value = "codeVal"
-        v-model="schDelYn"
-        label="삭제여부"
-        variant="outlined"
-        density="compact"
-        hide-details
-        class="me-2"
-        emptyText="전체"
-        emptyValue=""
-      />
-      <v-spacer></v-spacer>
-      <v-btn
-        variant="outlined"
-        class="me-2"
-        color="primary"
-        append-icon="mdi-magnify"
-        @click="(e)=>{onSearch(0);}"
-      >
-        검색
-      </v-btn>
-      <v-btn
-        variant="outlined"
-        color="seccondary"
-        append-icon="mdi-refresh"
-        @click="init"
-      >
-        초기화
-      </v-btn>
+      <v-row justify="center" align="center" class="ml-4">
+        <v-col>
+            <v-row>
+              <TextField
+                label="거래코드"
+                class="flex-grow-1 me-2 mw150"
+                v-model="schTrnCd"
+              />
+              <TextField
+                label="거래명"
+                class="flex-grow-1 me-2 mw250"
+                v-model="schTrnNm"
+              />
+              <TextField
+                label="서비스명"
+                class="flex-grow-1 me-2 mw200"
+                v-model="schSvcNm"
+              />
+              <TextField
+                label="메소드명"
+                class="flex-grow-1 me-2 mw250"
+                v-model="schMtdNm"
+              />
+              <Selectbox
+                :items="delYnItems"
+                item-title = "codeValCtnt"
+                item-value = "codeVal"
+                v-model="schDelYn"
+                label="삭제여부"
+                class="me-2 mw100"
+                emptyText="전체"
+                emptyValue=""
+              />
+          </v-row>
+        </v-col>
+      </v-row>
+        <v-col class="btn-group"> 
+          <v-btn
+            variant="outlined"
+            class="me-2"
+            color="primary"
+            append-icon="mdi-magnify"
+            @click="(e)=>{onSearch(0);}"
+          >
+            검색
+          </v-btn>
+          <v-btn
+            variant="outlined"
+            color="seccondary"
+            append-icon="mdi-refresh"
+            @click="init"
+          >
+            초기화
+          </v-btn>
+        </v-col>
     </div>
 
     <!-- 본문 영역 -->
@@ -107,11 +99,11 @@
               <span>{{common.numberFormat(item.tmotMs)}}</span>
             </template>
             <template v-slot:[`item.lastLoginDtm`]="{ item }">
-              <span>{{ common.getDateString(item.lastLoginDtm, 'YYYY-MM-DD HH:MM:SS', "-") }}</span>
+              <span>{{ common.getDateString(item.lastLoginDtm, 'yyyy-MM-dd HH:MM:SS', "-") }}</span>
               <v-icon v-if="!common.isEmpty(item.lastLoginDtm)" icon="mdi-calendar-clock-outline" />
             </template>
             <template v-slot:[`item.lastTrnDtm`]="{ item }">
-              <span>{{ common.getDateString(item.lastTrnDtm, 'YYYY-MM-DD HH:MM:SS') }}</span>
+              <span>{{ common.getDateString(item.lastTrnDtm, 'yyyy-MM-dd HH:MM:SS') }}</span>
               <v-icon icon="mdi-calendar-clock-outline" />
             </template>
           </v-data-table-virtual>
@@ -151,11 +143,8 @@
                   label="거래코드"
                   v-model="trnCdItem.trnCd"
                   :error="errorState.trnCd"
-                  variant="outlined"
                   dense
-                  density="compact"
                   clearable
-                  hide-details
                   :readonly="trnCdLock"
                   required
                 >
@@ -175,11 +164,8 @@
                   label="거래명"
                   v-model="trnCdItem.trnNm"
                   :error="errorState.trnNm"
-                  variant="outlined"
                   dense
-                  density="compact"
                   clearable
-                  hide-details
                   required
                 />
               </v-col>
@@ -190,11 +176,8 @@
                   label="서비스명"
                   v-model="trnCdItem.svcNm"
                   :error="errorState.svcNm"
-                  variant="outlined"
                   dense
-                  density="compact"
                   clearable
-                  hide-details
                   required
                 />
               </v-col>
@@ -203,18 +186,15 @@
                   label="메소드명"
                   v-model="trnCdItem.mtdNm"
                   :error="errorState.mtdNm"
-                  variant="outlined"
                   dense
-                  density="compact"
                   clearable
-                  hide-details
                   required
                 />
               </v-col>
             </v-row>
             <v-row>
               <v-col>
-                <v-textarea label="Label"
+                <v-textarea label="설명"
                             variant="outlined"
                             v-model="trnCdItem.description"
                             :error="errorState.description"></v-textarea>
@@ -226,12 +206,9 @@
                   label="타임아웃(ms)"
                   v-model="trnCdItem.tmotMs"
                   :error="errorState.tmotMs"
-                  variant="outlined"
                   dataType="formatNumber"
                   dense
-                  density="compact"
                   clearable
-                  hide-details
                   suffix="(ms)"
                   class="text-right"
                   required
@@ -245,9 +222,6 @@
                   v-model="trnCdItem.delYn"
                   :error="errorState.delYn"
                   label="삭제여부"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
                   required
                   :readonly="delYnLock"
                 />
@@ -259,23 +233,17 @@
                   label="최종거래일시"
                   dataType="datetime"
                   v-model="trnCdItem.lastTrnDtm"
-                  variant="outlined"
                   dense
-                  density="compact"
                   append-inner-icon="mdi-calendar-clock-outline"
                   readonly
-                  hide-details
                 ></TextField>
               </v-col>
               <v-col>
                 <TextField
                   label="최종거래코드"
                   v-model="trnCdItem.lastTrnCd"
-                  variant="outlined"
                   dense
-                  density="compact"
                   readonly
-                  hide-details
                 ></TextField>
               </v-col>
             </v-row>
@@ -284,22 +252,16 @@
                 <TextField
                   label="최종거래사용자"
                   v-model="trnCdItem.lastTrnUid"
-                  variant="outlined"
                   dense
-                  density="compact"
                   readonly
-                  hide-details
                 ></TextField>
               </v-col>
               <v-col>
                 <TextField
                   label="최종거래UUID"
                   v-model="trnCdItem.lastTrnUUID"
-                  variant="outlined"
                   dense
-                  density="compact"
                   readonly
-                  hide-details
                 ></TextField>
               </v-col>
             </v-row>
@@ -398,7 +360,9 @@ const onSearch = async (pageNo) => {
   gridLoading.value = true;
 
   await common.sendByTrnCd('TRN00R02', params, (req, res)=> {
-      if(!res.payload.trnCdList.empty){
+      if(res.payload.empty){
+        common.showSnackbar(`조회된 데이터가 없습니다.`, "primary", 3000);
+      } else {
         pageInfo.value.totalCnt = res.payload.totalElements;
         pageInfo.value.totalPages = res.payload.totalPages;
         pageInfo.value.first = res.payload.first;
